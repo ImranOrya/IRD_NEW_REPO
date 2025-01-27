@@ -125,9 +125,9 @@ class NewsController extends Controller
                     'path' => $news->newsDocument->url ?? '',
                 ],
                 'user' =>
-                [
-                    User::select('id','username')->where('id',$news->user->id)->first()
-                ],
+                
+                    User::select('id','username')->where('id',$news->user_id)->first()->username
+                ,
 
                 'date' => $news->date,
                 'visible' => $news->visible,
