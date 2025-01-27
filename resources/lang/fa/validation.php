@@ -15,6 +15,10 @@ return [
         "saved_file" => "کتاب مرتبط",
         "old_password" => "رمز عبور قدیمی",
         "new_password" => "رمز عبور جدید",
-        "confirm_password" => "رمز عبور را تایید کنید"
+        "confirm_password" => "رمز عبور را تایید کنید",
+        'picture' => "تصویر",
+        "name_english" => "نام انگلیسی",
+        "name_pashto" => "نام پشتو",
+        "name_farsi" => "نام فارسی"
     ],
 ];

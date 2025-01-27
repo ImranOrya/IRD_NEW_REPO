@@ -15,6 +15,10 @@ return [
         "saved_file" => "Related book",
         "old_password" => "Old Password",
         "new_password" => "New Password",
-        "confirm_password" => "Confirm Password"
+        "confirm_password" => "Confirm Password",
+        'picture' => "Picture",
+        "name_english" => "Name English",
+        "name_pashto" => "Name Pashto",
+        "name_farsi" => "Name Farsi"
     ],
 ];

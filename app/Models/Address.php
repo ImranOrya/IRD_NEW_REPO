@@ -9,4 +9,11 @@ class Address extends Model
 {
     use HasFactory;
     protected $guarded = [];
+
+
+    public function addressTrans(){
+        return $this->hasMany(AddressTran::class);
+    }
+
+    
 }

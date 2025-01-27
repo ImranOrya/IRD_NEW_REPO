@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\template\staff;
+namespace App\Http\Requests\template\office;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -22,16 +22,13 @@ class StaffStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
-
-            'email' =>'required|email',
-            'contact' =>'required',
-            'name_english' =>'required|string',
-            'name_pashto' =>'required|string',
-            'name_farsi' =>'required|string',
-            'profile' =>'required|mimes:png,jpg',
-            'staff_type_id' =>'required'
-
+            'email' => 'required|email',
+            'contact' => 'required',
+            'name_english' => 'required|string',
+            'name_pashto' => 'required|string',
+            'name_farsi' => 'required|string',
+            'picture' => 'required|mimes:png,jpg,jpeg',
+            'staff_type_id' => 'required'
         ];
     }
 }

@@ -2,50 +2,79 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Ngo;
 use App\Models\News;
 use App\Models\User;
-use App\Models\District;
+use App\Models\Staff;
+
+use App\Models\Address;
+use App\Enums\StaffEnum;
+use App\Models\Director;
 
 use App\Models\Province;
+use App\Models\CheckList;
 use App\Models\Translate;
+use App\Enums\LanguageEnum;
 use Illuminate\Http\Request;
 use App\Enums\StatusTypeEnum;
-
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\App;
+use App\Traits\Address\AddressTrait;
 use function Laravel\Prompts\select;
 use Illuminate\Support\Facades\Redis;
 
 class TestController extends Controller
 {
+    use AddressTrait;
     public function index(Request $request)
     {
-        $locale = "en";
-        $query =  DB::table('news as n')
-            ->join('news_trans as ntr', 'ntr.news_id', '=', 'n.id')
-            ->join('news_type_trans as ntt', 'ntt.news_type_id', '=', 'n.news_type_id')
-            ->join('priority_trans as pt', 'pt.priority_id', '=', 'n.priority_id')
-            ->join('users as us', 'us.id', '=', 'n.user_id')
-            ->leftJoin('news_documents as nd', 'nd.news_id', '=', 'n.id')
-            ->where('ntr.language_name', $locale)
-            ->where('pt.language_name', $locale)
-            ->where('ntt.language_name', $locale)
-            ->select(
-                'n.id',
-                'n.visible',
-                'n.date',
-                'n.visibility_date',
-                'n.news_type_id',
-                'ntt.value AS news_type',
-                'n.priority_id',
-                'pt.value AS priority',
-                'us.username AS user',
-                'ntr.title',
-                'ntr.contents',
-                'nd.url AS image'  // Assuming you want the first image URL
-            )
+        $locale = "fa";
+
+        return CheckList::join('check_list_trans as ct', 'ct.check_list_id', '=', 'check_lists.id')
+            ->where('ct.language_name', $locale)
+            ->select('ct.value as name', 'check_lists.id', 'check_lists.file_extensions', 'check_lists.description')
+            ->orderBy('check_lists.id', 'desc')
             ->get();
-        return $query;
+
+
+        return   $this->getCompleteAddress(1, 'fa');
+        $lang = 'en';
+        $id = 1;
+
+        $irdDirector = Staff::with([
+            'staffTran' => function ($query) use ($lang) {
+                $query->select('staff_id', 'name', 'last_name')->where('language_name', $lang);
+            }
+        ])->select('id')->where('staff_type_id', StaffEnum::director->value)->first();
+
+
+        return $irdDirector->staffTran[0]->name . '  ' . $irdDirector->staffTran[0]->last_name;
+
+        $lang = 'en';
+        $ngo = Ngo::with(
+            [
+                'ngoTrans' => function ($query) use ($lang) {
+                    $query->select('ngo_id', 'name', 'vision', 'mission', 'general_objective', 'objective')->where('language_name', $lang);
+                },
+                'email:id,value',
+                'contact:id,value',
+
+
+            ]
+
+        )->select(
+            'id',
+            'email_id',
+            'contact_id',
+            'address_id',
+            'abbr',
+            'registration_no',
+            'date_of_establishment',
+            'moe_registration_no',
+
+        )->where('id', 1)->first();
+
+        return    $this->getCompleteAddress($ngo->address_id, 'en');
 
         dd($query->toSql(), $query->getBindings());
         // ->get();

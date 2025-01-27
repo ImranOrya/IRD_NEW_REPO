@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\App;
 
 abstract class Controller
 {
-    public function storeProfile(Request $request, $dynamic_path = 'user-profile')
+    public function storeProfile(Request $request, $dynamic_path = 'user-profile', $columnName = "profile")
     {
         // 1. If storage not exist create it.
         $path = storage_path() . "/app/private/" . $dynamic_path . "/";
@@ -22,8 +22,8 @@ abstract class Controller
 
         // 2. Store image in filesystem
         $fileName = null;
-        if ($request->hasFile('profile')) {
-            $file = $request->file('profile');
+        if ($request->hasFile($columnName)) {
+            $file = $request->file($columnName);
             if ($file != null) {
                 $fileName = Str::uuid() . '.' . $file->extension();
                 $file->move($path, $fileName);

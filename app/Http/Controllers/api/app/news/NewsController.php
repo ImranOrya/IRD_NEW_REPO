@@ -9,13 +9,10 @@ use App\Http\Requests\app\news\NewsUpdateRequest;
 use App\Models\News;
 use App\Models\NewsDocument;
 use App\Models\NewsTran;
-use App\Models\NewsTypeTrans;
-use App\Models\PriorityTrans;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class NewsController extends Controller
 {
@@ -33,7 +30,6 @@ class NewsController extends Controller
             ->where('ntr.language_name', $locale)
             ->where('pt.language_name', $locale)
             ->where('ntt.language_name', $locale)
-            ->where('n.visible', 1)
             ->select(
                 'n.id as id',
                 'n.visible',
@@ -124,11 +120,10 @@ class NewsController extends Controller
                     'name' => $news->newsDocument->name ?? '',
                     'path' => $news->newsDocument->url ?? '',
                 ],
-                'user' =>
-                
-                    User::select('id','username')->where('id',$news->user_id)->first()->username
-                ,
-
+                'user' => User::select('id', 'username')
+                    ->where('id', $news->user_id)
+                    ->first()
+                    ->username,
                 'date' => $news->date,
                 'visible' => $news->visible,
                 'visibility_date' => $news->visibility_date,
@@ -184,6 +179,7 @@ class NewsController extends Controller
     {
         $locale = App::getLocale();
         $query =  DB::table('news as n')
+            ->join('users as u', 'u.id', '=', 'n.user_id')
             ->join('news_trans as ntr', 'ntr.news_id', '=', 'n.id')
             ->join('news_type_trans as ntt', 'ntt.news_type_id', '=', 'n.news_type_id')
             ->join('priority_trans as pt', 'pt.priority_id', '=', 'n.priority_id')
@@ -195,18 +191,17 @@ class NewsController extends Controller
             ->where('n.id', $id)
             ->select(
                 'n.id',
-                'n.visible',
                 'n.date',
-                'n.visibility_date',
                 'n.news_type_id',
                 'ntt.value AS news_type',
                 'n.priority_id',
                 'pt.value AS priority',
                 'ntr.title',
                 'ntr.contents',
+                'u.username as user',
                 'nd.url AS image'  // Assuming you want the first image URL
             )
-            ->get();
+            ->first();
         return response()->json([
             "news" => $query
 
@@ -371,8 +366,22 @@ class NewsController extends Controller
     {
         $news = News::find($id);
         if ($news) {
+            // Begin transaction
+            DB::beginTransaction();
             // 1. Delete Translation
+            NewsTran::where('news_id', $news->id)->delete();
+            $existingDocument = NewsDocument::where('news_id', $news->id)->first();
+            // Delete documents
+            $path = storage_path('app/' . $existingDocument->url);
 
+            if (file_exists($path)) {
+                unlink($path);
+            }
+            $existingDocument->delete();
+            $news->delete();
+
+            // Commit transaction
+            DB::commit();
             return response()->json([
                 'message' => __('app_translation.success'),
             ], 200, [], JSON_UNESCAPED_UNICODE);

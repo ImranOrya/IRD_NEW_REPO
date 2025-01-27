@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('nid_no',64);
             $table->string('nid_attachment')->nullable();
             $table->unsignedBigInteger('nid_type_id');
+            $table->string('profile',128);
             $table->foreign('nid_type_id')->references('id')->on('nid_types')
                 ->onUpdate('cascade')
                 ->onDelete('no action');

@@ -25,5 +25,6 @@ return [
     "new_password" => "رمز عبور جدید",
     "confirm_password" => "تایید رمز عبور",
     'news_not_found' => 'اخبار یافت نشد.',
-    'cover_pic_not_found' => 'تصویر جلد یافت نشد.'
+    'cover_pic_not_found' => 'تصویر جلد یافت نشد.',
+    "employee_not_found" => "کارمند پیدا نشد"
 ];

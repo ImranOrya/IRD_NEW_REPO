@@ -36,6 +36,11 @@ class Ngo extends Authenticatable
         return $this->belongsTo(Email::class, 'email_id');
     }
 
+     public function address()
+    {
+        return $this->belongsTo(Address::class, 'address_id');
+    }
+
     public function ngoTrans()
     {
         return $this->hasMany(NgoTran::class);

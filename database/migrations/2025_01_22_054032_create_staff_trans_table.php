@@ -21,6 +21,7 @@ return new class extends Migration
             $table->foreign('language_name')->references('name')->on('languages')->onUpdate('cascade')
              ->onDelete('cascade');
              $table->string('name',64);
+             $table->string('last_name',64);
             $table->timestamps();
         });
     }

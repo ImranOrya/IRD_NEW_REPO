@@ -22,7 +22,7 @@ class NewsUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        $allowedExtensions = ['png', 'jpeg', 'gif'];
+        $allowedExtensions = ['png', 'jpg', 'jpeg', 'gif'];
 
         return [
             'id' => 'required|integer',

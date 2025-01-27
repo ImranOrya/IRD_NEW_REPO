@@ -6,8 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class OfficeInformation extends Model
 {
-    //
-
     protected $guarded = [];
-
 }

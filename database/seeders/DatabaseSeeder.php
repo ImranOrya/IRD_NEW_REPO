@@ -9,28 +9,31 @@ use App\Enums\RoleEnum;
 use App\Models\Contact;
 use App\Models\Country;
 use App\Models\NgoType;
+use App\Models\NidType;
 use App\Models\Setting;
+use App\Enums\StaffEnum;
 use App\Models\District;
 use App\Models\Language;
 use App\Models\ModelJob;
+use App\Models\NewsType;
+use App\Models\Priority;
 use App\Models\Province;
 use App\Models\TimeUnit;
+use App\Models\StaffType;
 use App\Models\Translate;
 use App\Models\Permission;
 use App\Models\StatusType;
+use App\Enums\PriorityEnum;
 use App\Models\Destination;
 use App\Models\RequestType;
 use App\Models\NgoTypeTrans;
+use App\Models\NidTypeTrans;
 use App\Enums\StatusTypeEnum;
+use App\Models\NewsTypeTrans;
+use App\Models\PriorityTrans;
 use App\Models\RolePermission;
 use App\Models\UserPermission;
 use App\Models\DestinationType;
-use App\Models\NewsType;
-use App\Models\NewsTypeTrans;
-use App\Models\NidType;
-use App\Models\NidTypeTrans;
-use App\Models\Priority;
-use App\Models\PriorityTrans;
 use App\Models\SettingTimeUnit;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -50,6 +53,7 @@ class DatabaseSeeder extends Seeder
         $this->priorityTypes();
         $this->nidTypes();
         $this->requestTypes();
+        $this->staffTypes();
         $email =  Email::factory()->create([
             "value" => "super@admin.com"
         ]);
@@ -561,7 +565,9 @@ class DatabaseSeeder extends Seeder
     }
     public function priorityTypes()
     {
-        $priority = Priority::create([]);
+        $priority = Priority::create([
+            'id' => PriorityEnum::high->value
+        ]);
         PriorityTrans::create([
             "value" => "اولویت بالا",
             "language_name" => "fa",
@@ -577,7 +583,9 @@ class DatabaseSeeder extends Seeder
             "language_name" => "en",
             "priority_id" => $priority->id
         ]);
-        $priority = Priority::create([]);
+        $priority = Priority::create([
+            'id' => PriorityEnum::medium->value
+        ]);
         PriorityTrans::create([
             "value" => "اولویت متوسط",
             "language_name" => "fa",
@@ -593,7 +601,9 @@ class DatabaseSeeder extends Seeder
             "language_name" => "en",
             "priority_id" => $priority->id
         ]);
-        $priority = Priority::create([]);
+        $priority = Priority::create([
+            'id' => PriorityEnum::low->value
+        ]);
         PriorityTrans::create([
             "value" => "اولویت پایین",
             "language_name" => "fa",
@@ -654,7 +664,7 @@ class DatabaseSeeder extends Seeder
         DB::table('status_type_trans')->insert([
             'status_type_id' => $statustype->id,
             'language_name' => 'en',
-            'name' => 'active'
+            'name' => 'Active'
 
         ]);
         DB::table('status_type_trans')->insert([
@@ -681,13 +691,13 @@ class DatabaseSeeder extends Seeder
         ]);
         DB::table('status_type_trans')->insert([
             'status_type_id' => $statustype->id,
-            'language_name' => 'ps',
+            'language_name' => 'fa',
             'name' => 'مسدود'
 
         ]);
         DB::table('status_type_trans')->insert([
             'status_type_id' => $statustype->id,
-            'language_name' => 'fa',
+            'language_name' => 'ps',
             'name' => 'بند'
 
         ]);
@@ -702,13 +712,13 @@ class DatabaseSeeder extends Seeder
         ]);
         DB::table('status_type_trans')->insert([
             'status_type_id' => $statustype->id,
-            'language_name' => 'ps',
+            'language_name' => 'fa',
             'name' => 'وارد نشده است'
 
         ]);
         DB::table('status_type_trans')->insert([
             'status_type_id' => $statustype->id,
-            'language_name' => 'fa',
+            'language_name' => 'ps',
             'name' => 'داخل شوی نه دی'
 
         ]);
@@ -724,15 +734,52 @@ class DatabaseSeeder extends Seeder
         ]);
         DB::table('status_type_trans')->insert([
             'status_type_id' => $statustype->id,
-            'language_name' => 'ps',
+            'language_name' => 'fa',
             'name' => 'ثبت نشده'
 
         ]);
         DB::table('status_type_trans')->insert([
             'status_type_id' => $statustype->id,
-            'language_name' => 'fa',
+            'language_name' => 'ps',
             'name' => 'ثبت شوی نه دی'
 
+        ]);
+
+        $statustype =  StatusType::factory()->create([
+            'id' => StatusTypeEnum::in_progress,
+        ]);
+        DB::table('status_type_trans')->insert([
+            'status_type_id' => $statustype->id,
+            'language_name' => 'en',
+            'name' => 'In Progress'
+
+        ]);
+        DB::table('status_type_trans')->insert([
+            'status_type_id' => $statustype->id,
+            'language_name' => 'fa',
+            'name' => 'در جریان'
+
+        ]);
+        DB::table('status_type_trans')->insert([
+            'status_type_id' => $statustype->id,
+            'language_name' => 'ps',
+            'name' => 'د جریان په حال کی'
+
+        ]);
+    }
+    public function staffTypes()
+    {
+        DB::table('staff_types')->insert([
+            'id' => StaffEnum::manager,
+            'name' => "manager",
+        ]);
+        DB::table('staff_types')->insert([
+            'id' => StaffEnum::director,
+            'name' => "director",
+        ]);
+        DB::table('staff_types')->insert([
+            'id' => StaffEnum::technical_support,
+            'name' => "technical_support",
         ]);
     }
 

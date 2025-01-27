@@ -31,7 +31,7 @@ class NewsStoreRequest extends FormRequest
             'type' => 'required|integer|exists:news_types,id',
             'priority' => 'required|integer|exists:priorities,id',
             "date" => "required",
-            'cover_pic' => 'required|file|mimes:png,jpeg,gif|max:2048',
+            'cover_pic' => 'required|file|mimes:png,jpeg,gif,jpg|max:2048',
             // For optimization
             'type_name' => 'required ',
             'priority_name' => 'required ',

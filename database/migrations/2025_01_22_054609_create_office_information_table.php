@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('office_information', function (Blueprint $table) {
             $table->id();
-            $table->string('address_en',512);
-            $table->string('address_fa',512);
-            $table->string('address_ps',512);
-            $table->string('contact',32);
-            $table->string('email',64);
+            $table->string('address_english', 512);
+            $table->string('address_farsi', 512);
+            $table->string('address_pashto', 512);
+            $table->string('contact', 32)->unique();
+            $table->string('email', 64)->unique();
             $table->timestamps();
         });
     }

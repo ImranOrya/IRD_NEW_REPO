@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\api\auth;
 
+use App\Enums\StatusTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\Email;
@@ -59,11 +60,12 @@ class NgoAuthController extends Controller
         if ($loggedIn) {
             // Get the auth user
             $user = $loggedIn['user'];
-            if ($user->ngoStatus->status_type_id == 2) {
+            if ($user->ngoStatus->status_type_id == StatusTypeEnum::blocked->value) {
                 return response()->json([
                     'message' => __('app_translation.account_is_block'),
                 ], 403, [], JSON_UNESCAPED_UNICODE);
             }
+            // Check If Ngo logged in for first time change to un_registered
 
             $user = $request->user()->load([
                 'ngoTrans' => function ($user) use ($locale) {

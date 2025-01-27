@@ -17,10 +17,10 @@ return new class extends Migration
             $table->foreign('staff_type_id')->references('id')->on('staff_types')
                 ->onUpdate('cascade')
                 ->onDelete('no action');
-            $table->string('contact',32);
-            $table->string('email',64);
+            $table->string('contact', 32)->unique();
+            $table->string('email', 64)->unique();
             $table->string('profile');
-    
+
             $table->timestamps();
         });
     }

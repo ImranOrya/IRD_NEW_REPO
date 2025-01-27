@@ -26,5 +26,6 @@ return [
     "new_password" => "New password",
     "confirm_password" => "Confirm Password",
     'news_not_found' => 'News Not Found.',
-    'cover_pic_not_found' => 'Cover Picture Not Found.'
+    'cover_pic_not_found' => 'Cover Picture Not Found.',
+    "employee_not_found" => "Employee Not found."
 ];
