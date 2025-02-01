@@ -22,8 +22,8 @@ class StaffStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => 'required|email',
-            'contact' => 'required',
+            'email' => 'required|email|unique:staff,email',
+            'contact' => 'required|unique:staff,contact',
             'name_english' => 'required|string',
             'name_pashto' => 'required|string',
             'name_farsi' => 'required|string',

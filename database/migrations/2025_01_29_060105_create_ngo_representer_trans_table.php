@@ -11,16 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('staff_trans', function (Blueprint $table) {
+        Schema::create('ngo_representer_trans', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('staff_id');
-            $table->foreign('staff_id')->references('id')->on('staff')
-                ->onUpdate('cascade')
+            $table->unsignedBigInteger('ngo_representer_id');
+            $table->foreign('ngo_representer_id')->references('id')->on('ngo_representers')->onUpdate('cascade')
                 ->onDelete('no action');
             $table->string('language_name');
             $table->foreign('language_name')->references('name')->on('languages')->onUpdate('cascade')
-                ->onDelete('cascade');
+                ->onDelete('no action');
+            $table->unsignedBigInteger('job_id')->nullable();
+            $table->foreign('job_id')->references('id')->on('model_jobs')
+                ->onUpdate('cascade')
+                ->onDelete('no action');
             $table->string('name', 64);
+            $table->string('last_name', 64)->nullable();
             $table->timestamps();
         });
     }
@@ -30,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('staff_trans');
+        Schema::dropIfExists('ngo_representer_trans');
     }
 };

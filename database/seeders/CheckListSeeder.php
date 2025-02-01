@@ -44,10 +44,7 @@ class CheckListSeeder extends Seeder
             [
                 'type' => CheckListTypeEnum::internal,
                 'file_extensions' => [
-                    "image/png",
-                    "image/jpeg",
-                    "image/gif",
-                    "application/pdf",
+                    "pdf",
                 ],
                 'description' => '',
                 'is_optional' => false,

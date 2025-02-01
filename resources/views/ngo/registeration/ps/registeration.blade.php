@@ -7,6 +7,9 @@
   <title>Document</title>
 </head>
 <style>
+  body{
+    direction: rtl;
+  }
   .min-logo{
     height: 70px;
     width: 70px;
@@ -91,135 +94,120 @@
   <div class="min-logo-div">
         <img src="{{ storage_path('app/public/images/emart.png') }}" class="min-logo" alt="">
 
-        <h4 class="header-text">Islamic Emirate Of Afghanistan</h4>
-        <h4  class="header-text">Ministry Of Public Health
+        <h4 class="header-text">د افغانستان اسلامي امارت</h4>
+        <h4  class="header-text">د عامې روغتیا وزارت
       </h4>
-        <h4 class="header-text">NGO Registration Form
+        <h4 class="header-text">د غیر دولتي موسسو/ بنسټونو د ثبت سند
       </h4>
       <br>
-      <h5 class="header-text">Registration Number ( {{ $register_number }} )</h5>
+      <h5 class="header-text"> ( {{ $register_number }} )  د راجستر ګڼه</h5>
 
   </div>
   
 <div class="min-contents">
 
     <p class="content-text">
-       This registration is signed on ({{ $date_of_sign }}) which represents a registration of ( {{ $register_number }} ) with the Ministry of Public Health.This document is not NOC or MoU. All NGOs must obtain NICs or permission from MoPH prior to the implementation of the health project.
+
+         د راجستر دا سند په ({{ $date_of_sign }}) نېټه لاسلیک شوی دی چې له عامې رواغتیا وزارت سره ({{ $ngo_name }}) مؤسسې د ثبت استازیتوب کوي.  دا سند د یادې مؤسسې د عدم مسؤلیت فورم (NOC) او یا هم هوکړه لیک (MOU) نه دی. ټولې غیرې دولتي مؤسسې باید له عامې روغتیا وزارت سره د هوکړه لیک تر لاسلیک مخکې د عدم مسؤلیت پانه ډکه او بشپړه کړي.
+
+
+       
+
      </p>
   <p class="content-text">
-      This umberlla registration does not replace the official NGO registration system of the Ministry of
-      Economy and is not related to any specific project proposal which requires formal, separate approvel
-      of the Ministry of Public Health. Its purpose is to outline major principles to be followed by all
-      agencies delivering health care in Afghanistan and needs only to be signed by each agency once every
-      year.
 
+
+
+  اد راجستر دا سند د اقتصاد وزارت د مؤسساتو د ثبت او راجستریشن سیستم بدیل نه دی او نه هم د کومې ځانګړې پروژې یا مؤسسې په غوښتنه چې د عامې روغتیا وزارت څخه د عدم مسؤلیت فورمې ته ضرورت ولري ترتیب شوی، بلکې د هغو مؤسساتو لپاره چې په افغانستان کې د روغتیايي خدمتونو په برخه کې فعالیت کوي ځينې اصول تعین کړي. د راجستر دا سند هر کال د عامې روغتیا وزارت او اړونده مؤسسې او اینجو تر منځ لاسلیک کیږي. 
 
   </p>
   <p class="contetn-text">
-    Name and Abbreviation: {{ $ngo_name  }} ({{ $abbr }})
+   نوم او د نوم لنډيز:  {{ $ngo_name  }} ({{ $abbr }})
   </p>
   <p class="content-text">
-    Contact address in Afghanistan and Headquarters:
-    Contact: {{$contact }} 
-    Address: {{$address  }}
+  په افغانستان کې د مرکزي دفتر دقیقه پته: 
+    
+   {{$address  }}
 
   </p>
   <p class="content-text">
-    Name and address of the responsible: <br>
-    Name:  {{ $director }} 
+  په افغانستان د مسؤل شخص نوم او د اوسېدو دقیقه پته:   <br>
+    نوم:  {{ $director }} 
     <br>
-    Director Address:{{ $director_address }}
+    آدرس:{{ $director_address }}
   </p>
   <p class="content-text">
-    E-mail account and phone number: {{ $email }}
+    آيمیل آدرس او د اړیکې شمېره : {{ $email }}  {{ $contact }}
 
       </p>
   <p class="content-text">
-    Date and place of establishment:  {{ $establishment_date }} , {{ $place_of_establishment }}
+    د تاسیس/رامنځته کېدو ځای او نېټه:  {{ $establishment_date }} , {{ $place_of_establishment }}
   </p>
   <p class="content-text">
-    Ministry of Economy Registration number: {{ $ministry_economy_no }}
+    په اقتصاد وزارت کې د راجستر ګڼه:  {{ $ministry_economy_no }}
   </p>
  
   <p class="content-text">
-    Organization’s general objectives: {{ $general_objective }}
+   د ادارې عمومې موخې: {{ $general_objective }}
   </p>
   <p class="content-text">
-      Organization’s objectives in Afghanistan: {{ $afganistan_objective }}
+     په افغانستان کې د ادارې موخې: {{ $afganistan_objective }}
   </p>
   <p class="content-text">
-    Organization’s Mission:{{ $mission }}
+    د ادارې رسالت :{{ $mission }}
   </p>
   <p class="content-text">
-    Organization’s Vision: {{ $vission }}
+   د ادارې لید لوری: {{ $vission }}
   </p>
 
   <p class="content-text">
-      <b> This registration obliges both parties to respect the following principles:</b>
+      <b>دغه راجستر دواړه لوري د یو لړ مادو په مراعاتولو مسؤلې ګڼي:</b>
       <br>
-      1-The registration is valid for one year and extendable in case there is no complaint against the
-        NGO and no violation by the NGO in implementing projects in the health sector.
+      1-	که چېرته د روغتیا په برخه کې د پروژې د تطبیق پر مهال د انجو لخوا کوم شکایت  شتون ونه لري، د راجستر دا سند د یو کال لپاره د اعتبار وړ دی.
         <br>
-        2-This document does not serve as a permission for NGOs to perform health activities. All NGOs
-        must obtain permission/NOC from the MoPH and sign MoU with the MoPH before the implementation of their health project.
+   2-	دا راجستر پاڼه د غیر دولتي مؤسساتو لپاره اجازه لیک او یا هم د عدم مسؤلیت فورم نه دی چې له مخې يې وکولی شي روغتیايي فعالیتونو تر سره او پروژې تطبیق کړي. ټولې غیر دولتي مؤسسې مکلفې دي چې د پروژې تر تطبیق وړاندې د عدم مسؤلیت فورم له عامې روغتیا وزارت څخه تر لاسه کړي او هم له عامې روغتیا وزارت سره هوکړه لیک لاسلیک کړي. 
         <br>
-        3-The NGO shall officially consult with the Ministry of Public Health about the selection of site
-        before the implementation of any health project. It should sign MoU with the Ministry of Public
-        Health prior to the project implementation so the provision of services is fully legal. Failure to do
-        so will cause disruption in their registration/renewal of registration.
+   3-	د پروژې تر تطبیق وړاندې اړونده غیر دولتي مؤسسه مکلفه ده چې د پروژې د انتخاب په برخه کې د عامې روغتیا وزارت مشوره تر لاسه او د پروژې تر پلي کولو وړاندې د عامې روغتیا وزارت سره هوکړه لیک لاسلیک کړي تر څو یې فعالیتونه قانوني بڼه خپله کړي، د هوکړه لیک نه لاسلیکول د مؤسسې سره د راجستر په برخه کې د ګډودۍ سبب کیږي او هم د مؤسسې راجستریشن دوباره تر نظر لاندې نیول کېږي.
+        <br>
+     4-	د راجستر د دې سند په اساس مؤسسه نشي کولی چې روغتیايي فعالیتونه تر سره کړي. د روغتیايي فعالیتونو د پیل لپاره باید اړونده مؤسسه له عامې روغتیا وزارت سره هوکړه لیک ولري.
+        <br>
+       5-	له عامې روغتیا وزارت څخه د عدم مسؤلیت فورم تر لاسه کولو او د هوکړه لیک تر لاسلیک وروسته اړونده مؤسسه کولی شي د اساسي روغتیايي خدمتونو (BPHS) او اساسي روغتوني خدمتونو (EPHS) ټولګو د منل شویو اجزاوو له مخې روغتیايي خدمتونه وړاندې کړي.
+        <br>
+     6-	کله چې یوه مؤسسه مستیقمه (Vertical) او یا هم د اساسي روغتیايي خدمتونو او اساسي روغتوني خدمتونو په یوه ځانګړې برخه کې پروژه تطیقوي، باید د عامې ورغتیا وزارت د مقام رسمي اجازه تر لاسه کړي. 
+        <br>
+      7-	انجو باید د عامې روغتیا وزارت ټولې پالیسۍ تطبیق کړي. 
+      <br>
+    8-	انجو باید د عامې روغتیا وزارت د ستندرد معلوماتي مدیریتي سیستم (HMIS) په اساس د خپل فعالیت راپور وړاندې کړي.
 
         <br>
-        4-Based on this registration, the NGOs cannot perform the health activity prior to signing MoU
-        between MoPH and NGOs.
+       9-	انجو به د عامې روغتیا وزارت په مرکزي او ولایتي سطحه د همغږۍ په میکانیزمونو کې برخه اخلي.
         <br>
-        5-Agency will deliver all components outlined in the Basic Package of Health Services (BPHS)
-        and/or Essential Package of Hospital Services (EPHS) after obtaining the NOC and signing MoU
-        with the Ministry.
+     10-	انجو به د غوښتنې له مخې د پروژې د مختلفو برخو لکه د کارکوونکو د ګمارنې، ګوښه کېدو، امتیازاتو او بودجې په اړه معلومات په خپل وخت د عامې روغتیا وزارت ته سپاري.
         <br>
-        6- If an NGO delivers a vertical program or focuses on certain components of BPHS/EPHS, they
-        must obtain official permission from the leadership of the MoPH.
+        11-	انجو باید د ملي نظارت او ارزیابۍ سیستم سره چې د عامې روغتیا وزارت او درېیم بنسټ له لوري تر سره کیږي هم، نظره وي.
         <br>
-        7-Agency will follow all health policies of the MoPH.
-        8-Agency will comply in reporting data and information based on the MoPH HMIS and standards.
+      12-	د انجو کارکوونکي باید پروژه په مناسبه توګه او د سیمې د منل شوي فرهنګ له مخې پلې کړي. 
         <br>
-        9-Agency will participate in coordination mechanisms at the central and provincial levels.
+        13-	انجو خپل کارکوونکي د تخصص او د پروژې د ضرورت په اساس په خپل تشکیل کې وګماري. 
         <br>
-        10-Project information including staffing, salary scale and budgets will be made available to MoPH
-        in a timely manner upon request.
+      14-	 د افغان کارمندانو د روزنې په برخه کې تر ارزونې وروسته د ضرورت په اساس به انجو په روزنه کې برخه واخلي.
         <br>
-        11-Agency will agree to participate in the national monitoring and evaluation system operated by
-        MoPH and a third party.
+      15-	 د راجستر د فورم له مخې د عامې روغتیا وزارت د مؤسسې له پروژې او فعالیتونو څخه په هر وخت کې د نظارت او ارزوني حق لري. 
         <br>
-        12-Agency staff will conduct themselves and implement their projects in a manner that is culturally
-        appropriate
+       16-	د عامې روغتیا وزارت او اړونده مؤسسه د مساواتو، روڼتیا، تبعیض، قومي او جنسي نفوس او نور هغه  اړونده فکتورونه چې د ملي بودجې انکشاف(NDBN) سند او د روغتیا ملي ستراتیژۍ (NHS) په اصولو کې بیان شوي  په کلکه مرعاتوي. 
         <br>
-        13-Agency will keep the number of the expatriate staff to the minimum required; based on needs
-        and competency.
+        17-	 که څه هم د لېږد رالېږد په برخه کې به ستونزې هم ولري، ولې محرومو سیمو ته دې لومړیتوب ورکړل شي.
         <br>
-        14-Agency will contribute towards training relevant Afghan staff based on a training need assessment for future sustainability.
+       18-	 د عامې روغتیا وزارت او اړونده مؤسسه باید په دې نظر وي چې د چارو د همغږۍ، روڼتیا او مقابل درناوي له مخې ګډ کار وکړي.
         <br>
-        15-The MoPH has the right to monitor & evaluate the agencies project activities at any time during
-        the duration of this registration.
+     19-	مخالفتونه دې د ولایتي روغتیايي همغږۍ کمېټې(PHCC) او یا په مرکز کې د عامې روغتیا وزارت د نماینده ګانو له لارې حل شي. د مخالفتونو  د حل او ارزیابی په موخه د عامې روغتیا وزارت د درېیم ګړې مرجع د ټاکلو صلاحیت له ځانه سره لري.
         <br>
-        16- MoPH and agency will respect the principles of equity, efficiency and non-discrimination on
-        the basis of ethnicity, gender or any other factor outlined in the National Development Budget
-        Narrative and National Health Strategy
-        <br>
-        17-In addition, under-served areas should be prioritized for service delivery even if these areas
-        present more difficulties logistically.
-        <br>
-        18-MoPH and agency agree to work together in a collaborative and transparent partnership that
+      20-	 په داسې حال کې چې فعالیت له یادو مادو سره مطابقت ونه لري د عامې روغتیا وزارت په هر وخت کې د دې راجستر د لغوه کولو صلاحیت لري.
 
-        is characterized by mutual respect.
         <br>
-        19-Any disputes will be resolved through discussion with Provincial Health Coordination Committee (PHCC) or central MoPH representatives. MoPH reserves the right to appoint a third party to
-        assist in resolving any disputes.
-        <br>
-        20-The MoPH has the right to terminate this registration at any time for non-compliance with any
-        of the above provisions of this registration.
-        <br>
-        21-NGO shall observe and implement the principles and laws of the Islamic Emirate of
-        Afghanistan.
+        <b>
+       21-	 اینجو د اسلامي امارت د اصولو او قوانینو په مرعاتولو مکلفه ده.
+        </b>
 
 
 
@@ -233,27 +221,28 @@
 
   <div class="sing-page">
      <div class="irddirector">
-    On behalf of MoPH
+   د عامې روغتیا وزارت استازی
     <br>
    {{$ird_director}} 
    <br>
-    Director of International Relations
+   د نړیوالو اړیکو، مرستو د همغږۍ او انسجام رئیس
     <br>
 <br>
     <br>
   
-    Signature:................................
+    د لاسلیک ځای:................................
   </div>
   <div class="ngodirector">
-   On behalf of NGO
+د مؤسسې استازی
    <br>
    {{ $director }}
    <br>
-    Director of {{ $ngo_name }}
+   رئیس {{ $ngo_name }}
    <br>
 <br>
     <br>
-    Signature:................................
+    د لاسلیک ځای
+  :................................
 
   </div>
    

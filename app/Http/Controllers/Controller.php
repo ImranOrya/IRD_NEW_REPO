@@ -162,4 +162,8 @@ abstract class Controller
             "translable_id" => $translable_id,
         ]);
     }
+    public function getTempPath()
+    {
+        return storage_path() . "/app/temp/";
+    }
 }

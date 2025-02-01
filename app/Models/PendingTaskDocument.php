@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class CheckList extends Model
+class PendingTaskDocument extends Model
 {
     protected $guarded = [];
 }

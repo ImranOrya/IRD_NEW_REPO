@@ -12,6 +12,7 @@ use App\Models\Staff;
 use App\Enums\StaffEnum;
 use App\Models\StaffTran;
 use App\Enums\LanguageEnum;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 
 class AboutController extends Controller
@@ -26,6 +27,28 @@ class AboutController extends Controller
             "manager" => $manager,
             "director" => $director,
             "technicalSupports" => $technicalSupports,
+
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
+    public function publicManager()
+    {
+        $locale = App::getLocale();
+        $query = DB::table('staff as s')
+            ->where('staff_type_id', StaffEnum::manager->value)
+            ->join('staff_trans as st', function ($join) use ($locale) {
+                $join->on('st.staff_id', '=', 's.id')
+                    ->where('st.language_name', '=', $locale);
+            })
+            ->select(
+                's.id',
+                's.contact',
+                's.email',
+                's.profile as picture',
+                'st.name'
+            )
+            ->first();
+        return response()->json([
+            "manager" => $query,
 
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
@@ -50,6 +73,28 @@ class AboutController extends Controller
             ->first();
         return response()->json([
             "manager" => $query,
+
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
+    public function publicDirector()
+    {
+        $locale = App::getLocale();
+        $query = DB::table('staff as s')
+            ->where('staff_type_id', StaffEnum::director->value)
+            ->join('staff_trans as st', function ($join) use ($locale) {
+                $join->on('st.staff_id', '=', 's.id')
+                    ->where('st.language_name', '=', $locale);
+            })
+            ->select(
+                's.id',
+                's.contact',
+                's.email',
+                's.profile as picture',
+                'st.name'
+            )
+            ->first();
+        return response()->json([
+            "director" => $query,
 
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
@@ -78,6 +123,28 @@ class AboutController extends Controller
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 
+    public function publicTechnicalSupports()
+    {
+        $locale = App::getLocale();
+        $query = DB::table('staff as s')
+            ->where('staff_type_id', StaffEnum::technical_support->value)
+            ->join('staff_trans as st', function ($join) use ($locale) {
+                $join->on('st.staff_id', '=', 's.id')
+                    ->where('st.language_name', '=', $locale);
+            })
+            ->select(
+                's.id',
+                's.contact',
+                's.email',
+                's.profile as picture',
+                'st.name'
+            )
+            ->first();
+        return response()->json([
+            "technicalStaff" => $query,
+
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
     public function technicalSupports()
     {
         $query = DB::table('staff as s')

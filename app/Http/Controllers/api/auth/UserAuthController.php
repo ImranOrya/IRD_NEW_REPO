@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\api\auth;
 
-use App\Enums\StatusTypeEnum;
+use App\Enums\Type\StatusTypeEnum;
 use App\Models\User;
 use App\Models\Email;
 use App\Models\ModelJob;

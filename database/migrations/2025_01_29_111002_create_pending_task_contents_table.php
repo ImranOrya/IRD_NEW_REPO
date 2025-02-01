@@ -11,16 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('staff_trans', function (Blueprint $table) {
+        Schema::create('pending_task_contents', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('staff_id');
-            $table->foreign('staff_id')->references('id')->on('staff')
+            $table->integer('step');
+            $table->longText('content');
+            $table->unsignedBigInteger('pending_task_id');
+            $table->foreign('pending_task_id')->references('id')
+                ->on('pending_tasks')
                 ->onUpdate('cascade')
-                ->onDelete('no action');
-            $table->string('language_name');
-            $table->foreign('language_name')->references('name')->on('languages')->onUpdate('cascade')
                 ->onDelete('cascade');
-            $table->string('name', 64);
             $table->timestamps();
         });
     }
@@ -30,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('staff_trans');
+        Schema::dropIfExists('pending_task_contents');
     }
 };

@@ -2,39 +2,40 @@
 
 namespace Database\Seeders;
 
-use App\Models\Role;
-use App\Models\User;
-use App\Models\Email;
+use App\Enums\PriorityEnum;
 use App\Enums\RoleEnum;
+use App\Enums\StaffEnum;
+use App\Enums\Type\JobTypeEnum;
+use App\Enums\Type\StatusTypeEnum;
 use App\Models\Contact;
 use App\Models\Country;
-use App\Models\NgoType;
-use App\Models\NidType;
-use App\Models\Setting;
-use App\Enums\StaffEnum;
+use App\Models\Destination;
+use App\Models\DestinationType;
 use App\Models\District;
+use App\Models\Email;
 use App\Models\Language;
 use App\Models\ModelJob;
 use App\Models\NewsType;
-use App\Models\Priority;
-use App\Models\Province;
-use App\Models\TimeUnit;
-use App\Models\StaffType;
-use App\Models\Translate;
-use App\Models\Permission;
-use App\Models\StatusType;
-use App\Enums\PriorityEnum;
-use App\Models\Destination;
-use App\Models\RequestType;
-use App\Models\NgoTypeTrans;
-use App\Models\NidTypeTrans;
-use App\Enums\StatusTypeEnum;
 use App\Models\NewsTypeTrans;
+use App\Models\NgoType;
+use App\Models\NgoTypeTrans;
+use App\Models\NidType;
+use App\Models\NidTypeTrans;
+use App\Models\Permission;
+use App\Models\Priority;
 use App\Models\PriorityTrans;
+use App\Models\Province;
+use App\Models\RequestType;
+use App\Models\Role;
 use App\Models\RolePermission;
-use App\Models\UserPermission;
-use App\Models\DestinationType;
+use App\Models\Setting;
 use App\Models\SettingTimeUnit;
+use App\Models\StaffType;
+use App\Models\StatusType;
+use App\Models\TimeUnit;
+use App\Models\Translate;
+use App\Models\User;
+use App\Models\UserPermission;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -105,6 +106,14 @@ class DatabaseSeeder extends Seeder
         $this->Translate("ریاست ", "ps", $directorate->id, DestinationType::class);
         $job =  ModelJob::factory()->create([
             "name" => "Administrator",
+            "type" => JobTypeEnum::users,
+        ]);
+        $this->Translate("مدیر", "fa", $job->id, ModelJob::class);
+        $this->Translate("مدیر", "ps", $job->id, ModelJob::class);
+
+        $job =  ModelJob::factory()->create([
+            "name" => "Manager",
+            "type" => JobTypeEnum::ngos,
         ]);
         $this->Translate("مدیر", "fa", $job->id, ModelJob::class);
         $this->Translate("مدیر", "ps", $job->id, ModelJob::class);

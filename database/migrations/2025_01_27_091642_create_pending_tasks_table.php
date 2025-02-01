@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('genders', function (Blueprint $table) {
+        Schema::create('pending_tasks', function (Blueprint $table) {
             $table->id();
-            $table->string('name_en',32);
-            $table->string('name_ps',32);
-            $table->string('name_fa',32);
+            $table->unsignedBigInteger('user_id');
+            $table->integer('user_type');
+            $table->integer('task_type');
+            $table->unsignedBigInteger('task_id');
             $table->timestamps();
         });
     }
@@ -25,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('genders');
+        Schema::dropIfExists('pending_tasks');
     }
 };

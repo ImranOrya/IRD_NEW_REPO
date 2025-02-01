@@ -2,6 +2,7 @@
 
 return [
     'required' => 'The :attribute field is required.',
+    'unique' => 'The :attribute has already been taken.',
     'email' => 'The :attribute must be a valid email address.',
     'attributes' => [
         'email' => 'Email Address',
@@ -19,6 +20,7 @@ return [
         'picture' => "Picture",
         "name_english" => "Name English",
         "name_pashto" => "Name Pashto",
-        "name_farsi" => "Name Farsi"
+        "name_farsi" => "Name Farsi",
+        "contact" => "Contact"
     ],
 ];

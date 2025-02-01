@@ -13,19 +13,17 @@ use App\Http\Controllers\Controller;
 
 class LocationController extends Controller
 {
-    public function contries(Request $request)
+    public function countries()
     {
-        $request->validate([
-            'countryId' => 'required',
-        ]);
-        $countryId = $request->input('countryId');
-
         $locale = App::getLocale();
         $tr = [];
-        if ($locale === LanguageEnum::default->value) {
-            $tr = Province::where('country_id', '=', $countryId)->select('id', 'name', 'country_id')->get();
+        if ($locale == LanguageEnum::default->value) {
+            $tr = Country::select('id', 'name')->get();
         } else {
-            $tr = $this->getTableTranslations(Country::class, $locale, 'asc');
+            $tr = Translate::where('translable_type', Country::class)
+                ->where('language_name', $locale)
+                ->select('translable_id as id', 'value as name')
+                ->get();
         }
         return response()->json($tr);
     }

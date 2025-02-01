@@ -2,6 +2,7 @@
 
 return [
     'required' => ':attribute مورد نیاز است.',
+    'unique' => ':attribute قبلا گرفته شده است.',
     'email' => ':attribute باید معتبر باشد',
     'attributes' => [
         'email' => 'ایمیل',
@@ -19,6 +20,7 @@ return [
         'picture' => "تصویر",
         "name_english" => "نام انگلیسی",
         "name_pashto" => "نام پشتو",
-        "name_farsi" => "نام فارسی"
+        "name_farsi" => "نام فارسی",
+        "contact" => "شماره تلفن"
     ],
 ];

@@ -11,11 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('genders', function (Blueprint $table) {
+        Schema::create('ngo_representers', function (Blueprint $table) {
             $table->id();
-            $table->string('name_en',32);
-            $table->string('name_ps',32);
-            $table->string('name_fa',32);
+            $table->unsignedBigInteger('agreement_id');
+            $table->foreign('agreement_id')->references('id')
+                ->on('agreements')
+                ->onUpdate('cascade')
+                ->onDelete('no action');
             $table->timestamps();
         });
     }
@@ -25,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('genders');
+        Schema::dropIfExists('ngo_representers');
     }
 };
