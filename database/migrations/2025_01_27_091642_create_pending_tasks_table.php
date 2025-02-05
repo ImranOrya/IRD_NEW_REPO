@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->integer('user_type');
-            $table->integer('task_type');
-            $table->unsignedBigInteger('task_id');
+            $table->integer('task_type')->comment('related ngo or project');
+            $table->unsignedBigInteger('task_id')->comment('ngo Id or project id');
             $table->timestamps();
         });
     }

@@ -18,7 +18,20 @@ class MediaController extends Controller
     {
         $path = storage_path('app/' . "{$storage}/{$folder}/{$folderType}/{$filename}");
         if (!file_exists($path)) {
-            return response()->json("Document Not found");
+            return response()->json([
+                'message' => __('app_translation.not_found'),
+            ], 404, [], JSON_UNESCAPED_UNICODE);
+        }
+
+        return response()->file($path);
+    }
+    public function downloadTemp($storage, $filename)
+    {
+        $path = storage_path() . "/app/{$storage}/{$filename}";
+        if (!file_exists($path)) {
+            return response()->json([
+                'message' => __('app_translation.not_found'),
+            ], 404, [], JSON_UNESCAPED_UNICODE);
         }
 
         return response()->file($path);

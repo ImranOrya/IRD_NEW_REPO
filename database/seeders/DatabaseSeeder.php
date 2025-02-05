@@ -508,6 +508,7 @@ class DatabaseSeeder extends Seeder
             "language_name" => "fa",
             "ngo_type_id" => $intergovernmental->id
         ]);
+
         NgoTypeTrans::factory()->create([
             "value" => "بین الدولتی",
             "language_name" => "ps",
@@ -773,6 +774,27 @@ class DatabaseSeeder extends Seeder
             'status_type_id' => $statustype->id,
             'language_name' => 'ps',
             'name' => 'د جریان په حال کی'
+
+        ]);
+        $statustype =  StatusType::factory()->create([
+            'id' => StatusTypeEnum::register_form_submited,
+        ]);
+        DB::table('status_type_trans')->insert([
+            'status_type_id' => $statustype->id,
+            'language_name' => 'en',
+            'name' => 'Register Form Submited'
+
+        ]);
+        DB::table('status_type_trans')->insert([
+            'status_type_id' => $statustype->id,
+            'language_name' => 'fa',
+            'name' => 'فورم تکمیل شد'
+
+        ]);
+        DB::table('status_type_trans')->insert([
+            'status_type_id' => $statustype->id,
+            'language_name' => 'ps',
+            'name' => 'فورم تکمیل شوی'
 
         ]);
     }

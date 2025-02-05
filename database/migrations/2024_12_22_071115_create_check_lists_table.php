@@ -17,7 +17,8 @@ return new class extends Migration
             $table->foreign('check_list_type_id')->references('id')->on('check_list_types')
                 ->onUpdate('cascade')
                 ->onDelete('no action');
-            $table->string('file_extensions');
+            $table->string('acceptable_extensions');
+            $table->string('acceptable_mimes')->comment('Stores frontend validation value');
             $table->boolean('is_optional')->default(false);
             $table->integer('file_size')->default('512')->comment('file size in KB');
             $table->string('description', 128);

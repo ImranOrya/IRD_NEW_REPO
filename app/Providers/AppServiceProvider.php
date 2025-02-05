@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Repositories\ngo\NgoRepository;
 use Illuminate\Support\ServiceProvider;
+use App\Repositories\ngo\NgoRepositoryInterface;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -11,7 +13,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(NgoRepositoryInterface::class, NgoRepository::class);
     }
 
     /**

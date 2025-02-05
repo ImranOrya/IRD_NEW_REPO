@@ -21,6 +21,8 @@ return [
         "name_english" => "Name English",
         "name_pashto" => "Name Pashto",
         "name_farsi" => "Name Farsi",
-        "contact" => "Contact"
+        "contact" => "Contact",
+        "director_contact" => "Director Contact Number",
+        "director_email" => "Director Email"
     ],
 ];

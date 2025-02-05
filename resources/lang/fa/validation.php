@@ -21,6 +21,8 @@ return [
         "name_english" => "نام انگلیسی",
         "name_pashto" => "نام پشتو",
         "name_farsi" => "نام فارسی",
-        "contact" => "شماره تلفن"
+        "contact" => "شماره تلفن",
+        "director_contact" => "شماره تماس رئیس",
+        "director_email" => "ایمیل رئیس",
     ],
 ];

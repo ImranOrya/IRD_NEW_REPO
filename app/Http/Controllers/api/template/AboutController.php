@@ -139,7 +139,7 @@ class AboutController extends Controller
                 's.profile as picture',
                 'st.name'
             )
-            ->first();
+            ->get();
         return response()->json([
             "technicalStaff" => $query,
 

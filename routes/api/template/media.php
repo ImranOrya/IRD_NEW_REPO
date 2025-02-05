@@ -6,5 +6,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->middleware(['api.key', "authorized:" . 'user:api'])->group(function () {
     Route::get('/media/{storage}/{folder}/{filename}', [MediaController::class, "show"]);
-    Route::get('/media/{storage}/{folder}/{folderType}/{filename}', [MediaController::class, "downloadDoc"]);
+    Route::get('/media/{storage}/{filename}', [MediaController::class, "downloadTemp"]);
+    // Route::get('/media/{storage}/{folder}/{folderType}/{filename}', [MediaController::class, "downloadDoc"]);
 });

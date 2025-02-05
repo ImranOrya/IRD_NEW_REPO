@@ -19,6 +19,7 @@ Route::prefix('v1')->middleware(['api.key', "authorized:" . 'user:api'])->group(
   Route::get('/ngoInit/{id}', [ViewsNgoController::class, 'ngoInit']);
   Route::post('ngos/personalDetail/destory/{id}', [DeletesNgoController::class, 'destroyPersonalDetail']);
   Route::post('ngos/storePersonalDetial/{id}', [StoresNgoController::class, 'storePersonalDetial']);
+  Route::post('ngo/store/personal/detail-final', [StoresNgoController::class, 'storePersonalDetialFinal']);
   Route::get('/ngos/record/count', [ViewsNgoController::class, "ngoCount"])->middleware(["hasViewPermission:" . PermissionEnum::ngo->value]);
   Route::get('/ngos/{page}', [ViewsNgoController::class, 'ngos'])->middleware(["hasViewPermission:" . PermissionEnum::ngo->value]);
   Route::get('/ngo/{id}', [ViewsNgoController::class, 'ngo'])->middleware(["hasViewPermission:" . PermissionEnum::ngo->value]);

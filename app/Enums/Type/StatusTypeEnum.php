@@ -9,4 +9,5 @@ enum StatusTypeEnum: int
     case unregistered = 3;
     case not_logged_in = 4;
     case in_progress = 5;
+    case register_form_submited = 6;
 }

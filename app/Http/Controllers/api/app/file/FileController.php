@@ -9,9 +9,8 @@ use Illuminate\Http\Request;
 use App\Enums\Type\TaskTypeEnum;
 use Illuminate\Http\UploadedFile;
 use App\Models\PendingTaskDocument;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Storage;
+use Exception;
 use Illuminate\Support\Facades\Validator;
 use Pion\Laravel\ChunkUpload\Receiver\FileReceiver;
 use Pion\Laravel\ChunkUpload\Handler\HandlerFactory;
@@ -72,7 +71,6 @@ class FileController extends Controller
         ]);
     }
 
-
     /**
      * Saves the file and validates it.
      */
@@ -81,22 +79,21 @@ class FileController extends Controller
         $fileActualName = $file->getClientOriginalName();
         $fileName = $this->createFilename($file);
         $fileSize = $file->getSize();
-        $finalPath = $this->getTempPath();
-        $fileFullPath = "{$finalPath}/{$fileName}";
-        $mimeType = $file->getMimeType();
+        $finalPath = $this->getTempFullPath();
+        $mimetype = $file->getMimeType();
+        $storePath = $this->getTempFilePath($fileName);
+        $extension = ".{$file->getClientOriginalExtension()}";
 
         $file->move($finalPath, $fileName);
 
         // Validate the file against checklist rules
-        $validationResult = $this->checkListCheck($request, $fileFullPath);
+        $validationResult = $this->checkListCheck($request, "{$finalPath}{$fileName}");
 
         if ($validationResult !== true) {
             return $validationResult; // Return validation errors
         }
         // Process pending task and document creation
-        $extension = $file->getClientOriginalExtension();
-        Log::info('START');
-        Log::info('END');
+
         $pending =  $this->pending($request, $id, $task_type);
 
         $data = [
@@ -104,12 +101,9 @@ class FileController extends Controller
             "name" => $fileActualName,
             "size" => $fileSize,
             "check_list_id" => $request->checklist_id,
-            "extension" => $mimeType,
-            "path" => $fileFullPath,
+            "extension" => $mimetype,
+            "path" => $storePath,
         ];
-
-
-
 
 
         $this->pendingDocument($data);
@@ -122,31 +116,26 @@ class FileController extends Controller
      */
     public function checkListCheck($request, $filePath)
     {
+        // 1. Validate check exist
         $checklist = CheckList::find($request->checklist_id);
 
-
-
-        // If you want to include file_extensions in a valid response, you could return it here if needed
-
         if (!$checklist) {
-            return response()->json(["error" => $checklist->file_extensions . "Checklist not found."], 404);
+            return response()->json([
+                'message' => __('app_translation.checklist_not_found'),
+            ], 404, [], JSON_UNESCAPED_UNICODE);
         }
-
-
         $rules = [
             "file" => [
                 "required",
-                // "mimes:pdf",
-                "mimes:{$checklist->file_extensions}",
+                "mimes:{$checklist->acceptable_extensions}",
                 "max:{$checklist->file_size}",
             ],
-
         ];
 
         $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
-            Storage::delete($filePath); // Cleanup invalid file
+            unlink($filePath);
             return response()->json(["errors" => $validator->errors()], 422);
         }
 
@@ -177,6 +166,31 @@ class FileController extends Controller
      */
     protected function pendingDocument(array $data)
     {
+        $pending_document = PendingTaskDocument::where(
+            "pending_task_id",
+            $data["pending_id"]
+        )->where('check_list_id', $data["check_list_id"])->first();
+
+        if ($pending_document) {
+            // 1. Delete prevoius record
+            try {
+                // To continue operation if file not exist
+                $this->deleteTempFile($pending_document->path);
+            } catch (Exception $err) {
+            }
+            // 2. Update existing record
+            $pending_document->update([
+                "size" => $data["size"],
+                "path" => $data["path"],
+                "check_list_id" => $data["check_list_id"],
+                "actual_name" => $data["name"],
+                "extension" => $data["extension"]
+            ]);
+
+            return; // Prevents creating a duplicate record
+        }
+
+        // Create a new record if none exists
         PendingTaskDocument::create([
             "pending_task_id" => $data["pending_id"],
             "size" => $data["size"],
@@ -186,6 +200,7 @@ class FileController extends Controller
             "extension" => $data["extension"],
         ]);
     }
+
 
     /**
      * Generate a unique filename.

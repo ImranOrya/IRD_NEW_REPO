@@ -25,8 +25,6 @@ class Ngo extends Authenticatable
         'remember_token',
     ];
 
-
-
     public function contact()
     {
         return $this->belongsTo(Contact::class, 'contact_id');
@@ -36,7 +34,7 @@ class Ngo extends Authenticatable
         return $this->belongsTo(Email::class, 'email_id');
     }
 
-     public function address()
+    public function address()
     {
         return $this->belongsTo(Address::class, 'address_id');
     }

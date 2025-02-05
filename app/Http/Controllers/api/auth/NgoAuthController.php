@@ -6,6 +6,7 @@ use App\Enums\Type\StatusTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\Email;
+use App\Models\NgoStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
@@ -60,23 +61,29 @@ class NgoAuthController extends Controller
         if ($loggedIn) {
             // Get the auth user
             $user = $loggedIn['user'];
-            if ($user->ngoStatus->status_type_id == StatusTypeEnum::blocked->value) {
+            $ngoStatus = NgoStatus::where("ngo_id", $user->id)->first();
+            if ($ngoStatus->status_type_id == StatusTypeEnum::blocked->value) {
                 return response()->json([
                     'message' => __('app_translation.account_is_block'),
                 ], 403, [], JSON_UNESCAPED_UNICODE);
             }
             // Check If Ngo logged in for first time change to un_registered
+            else if ($ngoStatus->status_type_id  == StatusTypeEnum::not_logged_in->value) {
+                $ngoStatus->status_type_id = StatusTypeEnum::unregistered->value;
+                $ngoStatus->save();
+            }
 
-            $user = $request->user()->load([
+            $user = $user->load([
                 'ngoTrans' => function ($user) use ($locale) {
                     $user->where('language_name', $locale)->select('id', 'ngo_id', 'name as ngo_name');
                 },
                 'contact:id,value',
                 'email:id,value',
-                'ngoStatus:id,status_type_is'
+                'ngoStatus:id,status_type_id'
 
             ]);
-            $userPermissions = $this->userWithPermission($user->id);
+
+            $userPermissions = $this->userWithPermission($user);
 
             return response()->json(
                 array_merge([
@@ -118,17 +125,17 @@ class NgoAuthController extends Controller
         $userPermissions = DB::table('ngos')
             ->join('permissions', function ($join) use ($userId) {
                 $join->on('ngo_permissions.permission', '=', 'permissions.name')
-                    ->where('ngo_permissions.user_id', '=', $userId);
+                    ->where('ngo_permissions.ngo_id', '=', $userId);
             })
             ->select(
-                "permissions.name as permission",
-                "permissions.icon as icon",
-                "permissions.priority as priority",
-                "ngo_permissions.view",
-                "ngo_permissions.add",
-                "ngo_permissions.delete",
-                "ngo_permissions.edit",
-                "ngo_permissions.id",
+                // "permissions.name as permission",
+                // "permissions.icon as icon",
+                // "permissions.priority as priority",
+                // "ngo_permissions.view",
+                // "ngo_permissions.add",
+                // "ngo_permissions.delete",
+                // "ngo_permissions.edit",
+                // "ngo_permissions.id",
             )
             ->orderBy("priority")
             ->get();

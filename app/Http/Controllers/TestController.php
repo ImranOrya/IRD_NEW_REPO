@@ -20,17 +20,25 @@ use App\Enums\LanguageEnum;
 use App\Models\NidTypeTrans;
 use Illuminate\Http\Request;
 use App\Enums\Type\StatusTypeEnum;
+use App\Models\PendingTaskContent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\App;
 use App\Traits\Address\AddressTrait;
 use function Laravel\Prompts\select;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Storage;
 
 class TestController extends Controller
 {
     use AddressTrait;
     public function index(Request $request)
     {
+        $path = storage_path() . "/app/temp/c9424391-b967-4dbf-a3c3-747f6d8382a2.pdf";
+        return dd(file_exists($path));
+        return PendingTaskContent::where('pending_task_id', 2)
+            ->select('content', 'id')
+            ->orderBy('id', 'desc')
+            ->first();
         $locale = App::getLocale();
         $query = DB::table('staff as s')
             ->where('staff_type_id', StaffEnum::manager->value)

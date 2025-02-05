@@ -11,10 +11,29 @@
   .min-logo {
     height: 70px;
     width: 70px;
-    text-align: center;
+    float: right;
+    text-align: right;
     margin: 0;
     padding: 0;
     margin-top: -40px;
+  }
+
+  .moph-logo {
+    height: 70px;
+    width: 70px;
+    float: left;
+    text-align: left;
+    margin: 0;
+    padding: 0;
+    margin-top: -40px;
+  }
+
+  .header-logo {
+    height: 50px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    margin-top: 120px;
   }
 
   .min-logo-div {
@@ -32,9 +51,23 @@
     padding: 0;
   }
 
-  .header-text {
+  .header-text-cont {
+
     padding: 0;
     margin: 0;
+    margin-top: 80px;
+  }
+
+  .header-text {
+
+    padding: 0;
+    margin: 0;
+  }
+
+  .first-page-text {
+    text-align: center;
+    /* font-size: 30px; */
+
   }
 
   .page {
@@ -96,50 +129,43 @@
 
   <div class="min-logo-div">
     <img src="{{ storage_path('app/public/images/emart.png') }}" class="min-logo" alt="">
+    <img src="{{ storage_path('app/public/images/moph.png') }}" class="moph-logo" alt="">
+    <img src="{{ storage_path('app/public/images/header.png') }}" class="header-logo" alt="">
 
-    <h4 class="header-text">Islamic Emirate Of Afghanistan</h4>
-    <h4 class="header-text">Ministry Of Public Health
-    </h4>
-    <h4 class="header-text">NGO Registration Form
-    </h4>
-    <br>
-    <h5 class="header-text">Registration Number ( {{ $register_number }} )</h5>
+
+
+    <div class="header-text-cont">
+
+      <h5 class="header-text">Ministry Of Public Health
+      </h5>
+      <h5 class="header-text">International Relations Directorate
+      </h5>
+      <h5 class="header-text">Islamic Emirate Of Afghanistan</h5>
+      <br>
+    </div>
+
 
   </div>
 
   <div class="min-contents">
 
-    <p class="content-text">
-      This registration is signed on ({{ $date_of_sign }}) which represents a registration of ( {{ $register_number }} ) with the Ministry of Public Health.This document is not NOC or MoU. All NGOs must obtain NICs or permission from MoPH prior to the implementation of the health project.
-    </p>
-    <p class="content-text">
-      This umberlla registration does not replace the official NGO registration system of the Ministry of
-      Economy and is not related to any specific project proposal which requires formal, separate approvel
-      of the Ministry of Public Health. Its purpose is to outline major principles to be followed by all
-      agencies delivering health care in Afghanistan and needs only to be signed by each agency once every
-      year.
-
-
-    </p>
-    <p class="contetn-text">
-      Name and Abbreviation: {{ $ngo_name  }} ({{ $abbr }})
-    </p>
-    <p class="content-text">
-      Contact address in Afghanistan and Headquarters:
-      Contact: {{$contact }}
-      Address: {{$address }}
-
-    </p>
-    <p class="content-text">
-      Name and address of the responsible: <br>
-      Name: {{ $director }}
+    <h1 class="first-page-text">
+      Memorandum of Understanding
+    </h1>
+    <h2 class="first-page-text">
+      Between
       <br>
-      Director Address:{{ $director_address }}
-    </p>
-    <p class="content-text">
-      E-mail account and phone number: {{ $email }}
+      The Ministry of Public Health
+      <br>
+      {{ ($ngo_name) }}
+    </h2>
 
-    </p>
+
+
+
+    <div class="page"></div>
+
+
     <p class="content-text">
       Date and place of establishment: {{ $establishment_date }} , {{ $place_of_establishment }}
     </p>

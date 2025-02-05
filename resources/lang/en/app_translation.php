@@ -27,5 +27,6 @@ return [
     "confirm_password" => "Confirm Password",
     'news_not_found' => 'News Not Found.',
     'cover_pic_not_found' => 'Cover Picture Not Found.',
-    "employee_not_found" => "Employee Not found."
+    "employee_not_found" => "Employee Not found.",
+    "checklist_not_found" => "CheckList Not found.",
 ];

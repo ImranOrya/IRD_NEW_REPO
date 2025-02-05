@@ -41,11 +41,20 @@ class CheckListSeeder extends Seeder
     protected function registerationCheckList()
     {
         $checklists = [
+
             [
                 'type' => CheckListTypeEnum::internal,
-                'file_extensions' => [
-                    "pdf",
+                'description' => 'ngo director nid',
+                'is_optional' => false,
+                'file_size' => 2048,
+                'translations' => [
+                    ['language_name' => 'en', 'value' => 'Ngo Director Nid'],
+                    ['language_name' => 'ps', 'value' => 'د نجو د ریسی تذکره'],
+                    ['language_name' => 'fa', 'value' => 'تذکره ریس انجو'],
                 ],
+            ],
+            [
+                'type' => CheckListTypeEnum::internal,
                 'description' => '',
                 'is_optional' => false,
                 'file_size' => 2048,
@@ -57,12 +66,6 @@ class CheckListSeeder extends Seeder
             ],
             [
                 'type' => CheckListTypeEnum::internal,
-                'file_extensions' => [
-                    "image/png",
-                    "image/jpeg",
-                    "image/gif",
-                    "application/pdf",
-                ],
                 'description' => '',
                 'is_optional' => false,
                 'file_size' => 2048,
@@ -78,8 +81,10 @@ class CheckListSeeder extends Seeder
         foreach ($checklists as $checklistData) {
             $checklist = CheckList::create([
                 'check_list_type_id' => $checklistData['type'],
-                'file_extensions' => json_encode($checklistData['file_extensions']),
+                'acceptable_extensions' => "pdf,png",
+                'acceptable_mimes' => ".pdf,.jpeg,.jpg,.png",
                 'description' => $checklistData['description'],
+                'file_size' => $checklistData['file_size'],
             ]);
 
             foreach ($checklistData['translations'] as $translation) {
