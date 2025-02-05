@@ -24,9 +24,6 @@ use App\Models\PendingTaskContent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\App;
 use App\Traits\Address\AddressTrait;
-use function Laravel\Prompts\select;
-use Illuminate\Support\Facades\Redis;
-use Illuminate\Support\Facades\Storage;
 
 class TestController extends Controller
 {

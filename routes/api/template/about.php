@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
   Route::get('/office', [AboutController::class, "office"]);
+  Route::get('/staff/public/office', [AboutController::class, "publicOffice"]);
   Route::get('/staff/public/director', [AboutController::class, "publicDirector"]);
   Route::get('/staff/public/manager', [AboutController::class, "publicManager"]);
   Route::get('/staff/public/technicalSupports', [AboutController::class, "publicTechnicalSupports"]);

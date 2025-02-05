@@ -169,6 +169,32 @@ class AboutController extends Controller
 
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
+    public function publicOffice()
+    {
+        $locale = App::getLocale();
+        $query = OfficeInformation::select()->first();
+        if ($query) {
+            $address = $query->address_english;
+            if ($locale == LanguageEnum::pashto->value) {
+                $address = $query->address_pashto;
+            } else {
+                $address = $query->address_farsi;
+            }
+            return response()->json([
+                "office" => [
+                    "id" => $query->id,
+                    "address" => $address,
+                    "contact" => $query->contact,
+                    "email" => $query->email,
+                ],
+
+            ], 200, [], JSON_UNESCAPED_UNICODE);
+        }
+        return response()->json([
+            "office" => null,
+
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
     public function office()
     {
         $query = OfficeInformation::select()->first();
