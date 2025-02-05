@@ -21,6 +21,9 @@ class NgoRepository implements NgoRepositoryInterface
                 'abbr',
                 'ngos.ngo_type_id',
                 'ngo_type_trans.value as type_name',
+                'ngos.registration_no',
+                'ngos.place_of_establishment',
+                'ngos.date_of_establishment',
                 'province_id',
                 'district_id',
                 'addresses.id as address_id',
@@ -31,13 +34,6 @@ class NgoRepository implements NgoRepositoryInterface
             )
             ->where('ngos.id', $ngo_id)
             ->first();
-
-        // Handle NGO not found
-        if (!$ngo) {
-            return response()->json([
-                'message' => __('app_translation.ngo_not_found'),
-            ], 404);
-        }
         return $ngo;
     }
 }

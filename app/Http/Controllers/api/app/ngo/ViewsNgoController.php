@@ -71,11 +71,6 @@ class ViewsNgoController extends Controller
                 'n.created_at'
             );
 
-
-
-
-
-
         $this->applyDate($query, $request);
         $this->applyFilters($query, $request);
         $this->applySearch($query, $request);
@@ -115,6 +110,12 @@ class ViewsNgoController extends Controller
 
         // Joining necessary tables to fetch the NGO data
         $ngo = $this->ngoRepository->getNgoInit($locale, $ngo_id);
+        // Handle NGO not found
+        if (!$ngo) {
+            return response()->json([
+                'message' => __('app_translation.ngo_not_found'),
+            ], 404);
+        }
 
         // Fetching translations using a separate query
         $translations = $this->ngoNameTrans($ngo_id);
@@ -129,7 +130,8 @@ class ViewsNgoController extends Controller
             'abbr' => $ngo->abbr,
             'type' => ['name' => $ngo->type_name, 'id' => $ngo->ngo_type_id],
             'contact' => $ngo->contact,
-            'email' => $ngo->email,
+            'email' =>   $ngo->email,
+            'registration_no' => $ngo->registration_no,
             'province' => ['name' => $address['province'], 'id' => $ngo->province_id],
             'district' => ['name' => $address['district'], 'id' => $ngo->district_id],
             'area_english' => $areaTrans['en']->area ?? '',
@@ -143,33 +145,16 @@ class ViewsNgoController extends Controller
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 
+
+
     public function ngoDetail(Request $request, $ngo_id)
     {
 
         $locale = App::getLocale();
 
         // Joining necessary tables to fetch the NGO data
-        $ngo = Ngo::join('contacts', 'contact_id', '=', 'contacts.id')
-            ->leftJoin('emails', 'email_id', '=', 'emails.id')
-            ->leftJoin('addresses', 'address_id', '=', 'addresses.id')
-            ->select(
-                'registration_no',
-                'abbr',
-                'moe_registration_no',
-                'place_of_establishment',
-                'province_id',
-                'district_id',
-                'addresses.id as address_id',
-                'ngos.email_id',
-                'emails.value as email',
-                'contacts.value as contact',
-                'ngos.contact_id',
-                'date_of_establishment',
+        $ngo = $this->ngoRepository->getNgoInit($locale, $ngo_id);
 
-
-            )
-            ->where('ngos.id', $ngo_id)
-            ->first();
 
         // Handle NGO not found
         if (!$ngo) {

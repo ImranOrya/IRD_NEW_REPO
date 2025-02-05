@@ -56,7 +56,7 @@ class NgoInitStoreRequest extends FormRequest
             "type.id" => "required|exists:ngo_types,id",
             "contact" => "required",
             "email" => "required",
-            "moe_registration_no" => "required",
+            "moe_registration_no" => "required|unique:ngos,moe_registration_no",
             "country.id" => "required|exists:countries,id",
             "establishment_date" => "required",
             "province.id" => "required|exists:provinces,id",
@@ -98,6 +98,7 @@ class NgoInitStoreRequest extends FormRequest
             //checkList 
             // 'checklistMap.*.check_list_id' => 'required|exists:check_lists,id',
             // 'checklistMap.*.extension' => 'required|string|in:.pdf,.docx,.xlsx', // Allowed extensions
+            
 
 
 

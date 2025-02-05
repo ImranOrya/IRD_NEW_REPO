@@ -28,7 +28,7 @@ return new class extends Migration
             $table->foreign('address_id')->references('id')->on('addresses')
                 ->onUpdate('cascade')
                 ->onDelete('no action');
-            $table->string('moe_registration_no')->nullable()->comment('Ministry of Economy register NO');
+            $table->string('moe_registration_no')->unique()->nullable()->comment('Ministry of Economy register NO');
             $table->unsignedBigInteger('place_of_establishment')->nullable();
             $table->foreign('place_of_establishment')->references('id')->on('countries')
                 ->onUpdate('cascade')

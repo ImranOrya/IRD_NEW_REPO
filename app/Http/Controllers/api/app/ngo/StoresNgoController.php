@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\api\app\ngo;
 
+use App\Enums\CheckListTypeEnum;
 use App\Enums\LanguageEnum;
 use App\Enums\pdfFooter\CheckListEnum;
 use App\Enums\PermissionEnum;
@@ -15,6 +16,8 @@ use App\Models\Address;
 use App\Models\AddressTran;
 use App\Models\Agreement;
 use App\Models\AgreementDocument;
+use App\Models\CheckList;
+use App\Models\CheckListType;
 use App\Models\Contact;
 use App\Models\Director;
 use App\Models\DirectorTran;
@@ -318,9 +321,32 @@ class StoresNgoController extends Controller
             ->where('task_id', $ngo_id)
             ->first();
 
+
         if (!$task) {
             return response()->json(['error' => 'No pending task found'], 404);
         }
+        // Get checklist IDs
+        $checkListIds = CheckList::where('check_list_type_id', CheckListTypeEnum::externel)
+            ->pluck('id')
+            ->toArray();
+
+        // Get checklist IDs from documents
+        $documentCheckListIds = PendingTaskDocument::where('pending_task_id', $task->id)
+            ->pluck('check_list_id')
+            ->toArray();
+
+        // Log::info('Global Exception =>' . $documentCheckListIds . '--------' . $checkListIds);
+
+
+        $missingCheckListIds = array_diff($checkListIds, $documentCheckListIds);
+
+        if (!empty($missingCheckListIds)) {
+            return response()->json([
+                'error' => __('app_translation.checklist_not_found'),
+                'missing_check_list_ids' => $missingCheckListIds
+            ], 400);
+        }
+
 
         $documents = PendingTaskDocument::join('check_lists', 'check_lists.id', 'pending_task_documents.check_list_id')
             ->select('size', 'path', 'acceptable_mimes', 'check_list_id', 'actual_name', 'extension')

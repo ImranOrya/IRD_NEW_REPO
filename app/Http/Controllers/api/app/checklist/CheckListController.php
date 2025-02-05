@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\api\app\checklist;
 
+use App\Enums\CheckListTypeEnum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use App\Http\Controllers\Controller;
@@ -22,6 +23,7 @@ class CheckListController extends Controller
         $locale = App::getLocale();
         $tr = CheckList::join('check_list_trans as ct', 'ct.check_list_id', '=', 'check_lists.id')
             ->where('ct.language_name', $locale)
+            ->where('check_list_type_id', CheckListTypeEnum::externel)
             ->select('ct.value as name', 'check_lists.id', 'check_lists.acceptable_mimes', 'check_lists.acceptable_extensions', 'check_lists.description')
             ->orderBy('check_lists.id')
             ->get();
