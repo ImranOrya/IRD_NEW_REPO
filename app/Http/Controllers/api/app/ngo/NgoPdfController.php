@@ -19,27 +19,27 @@ class NgoPdfController extends Controller
 
     public function generateForm(Request $request, $id)
     {
+        // return $request;
         $mpdf =  $this->generatePdf();
         $this->setWatermark($mpdf);
         $lang = $request->input('language_name');
 
-        $this->setFooter($mpdf, PdfFooterEnum::REGISTER_FOOTER->value);
-        $this->setFooter($mpdf, PdfFooterEnum::MOU_FOOTER_en->value);
-        $lang = 'en';
-        $id = 1;
+        // $this->setFooter($mpdf, PdfFooterEnum::REGISTER_FOOTER->value);
+        // $this->setFooter($mpdf, PdfFooterEnum::MOU_FOOTER_en->value);
+
         $data = $this->loadNgoData($lang, $id);
 
 
-        return view('project.mou.pdf.');
-        $this->pdfFilePart($mpdf, "project.mou.pdf.{$lang}.mou", $data);
-        // $this->pdfFilePart($mpdf, "ngo.registeration.{$lang}.registeration", $data);
+        // return view('project.mou.pdf.');
+        // $this->pdfFilePart($mpdf, "project.mou.pdf.{$lang}.mou", $data);
+        $this->pdfFilePart($mpdf, "ngo.registeration.{$lang}.registeration", $data);
         // Write additional HTML content
 
         // $mpdf->AddPage();
 
 
         // Output the generated PDF to the browser
-        return $mpdf->Output('document.pdf', 'I'); // Stream PDF to browser
+        return $mpdf->Output('document.pdf', 'D'); // Stream PDF to browser
 
     }
 
@@ -80,13 +80,12 @@ class NgoPdfController extends Controller
 
         $irdDirector = Staff::with([
             'staffTran' => function ($query) use ($lang) {
-                $query->select('staff_id', 'name', 'last_name')->where('language_name', $lang);
+                $query->select('staff_id', 'name')->where('language_name', $lang);
             }
         ])->select('id')->where('staff_type_id', StaffEnum::director->value)->first();
 
 
-        $ird_dir_name = $irdDirector->staffTran[0]->name . '  ' . $irdDirector->staffTran[0]->last_name;
-
+        $ird_dir_name = $irdDirector->staffTran[0]->name;
         $ngo_address =  $this->getCompleteAddress($ngo->address_id, $lang);
         $director_address =  $this->getCompleteAddress($director->address_id, $lang);
         $country_establishment = $this->getCountry($ngo->place_of_establishment, $lang);

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('directors', function (Blueprint $table) {
             $table->id();
-            $table->boolean('is_Active');
+            $table->boolean('is_active');
             $table->string('nid_no', 64);
             $table->unsignedBigInteger('nid_type_id');
             $table->foreign('nid_type_id')->references('id')->on('nid_types')

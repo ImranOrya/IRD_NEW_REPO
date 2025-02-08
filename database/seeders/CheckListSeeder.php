@@ -25,7 +25,7 @@ class CheckListSeeder extends Seeder
     {
         CheckListType::create(
             [
-                'id' => CheckListTypeEnum::internal,
+                'id' => CheckListTypeEnum::externel,
                 'name' => 'Internal'
             ]
         );
@@ -43,7 +43,7 @@ class CheckListSeeder extends Seeder
         $checklists = [
 
             [
-                'type' => CheckListTypeEnum::internal,
+                'type' => CheckListTypeEnum::externel,
                 'description' => 'ngo director nid',
                 'is_optional' => false,
                 'file_size' => 2048,

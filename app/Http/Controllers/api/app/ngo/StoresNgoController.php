@@ -17,6 +17,7 @@ use App\Models\AddressTran;
 use App\Models\Agreement;
 use App\Models\AgreementDocument;
 use App\Models\CheckList;
+use App\Models\CheckListTrans;
 use App\Models\CheckListType;
 use App\Models\Contact;
 use App\Models\Director;
@@ -37,6 +38,8 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+
+use function Pest\Laravel\json;
 
 class StoresNgoController extends Controller
 {
@@ -118,6 +121,7 @@ class StoresNgoController extends Controller
         DB::commit();
 
         $status = StatusTypeTran::where('status_type_id', StatusTypeEnum::not_logged_in->value)
+            ->where('language_name', $locale)
             ->select('name')->first();
         return response()->json(
             [
@@ -204,11 +208,34 @@ class StoresNgoController extends Controller
 
     public function storePersonalDetialFinal(NgoInitStoreRequest $request)
     {
+        // return $request;
         $id = $request->ngo_id;
         $validatedData =  $request->validated();
 
+        Log::info($request->all());
+
+
+
+
+        $agreement = Agreement::where('ngo_id', $id)
+            ->latest('end_date') // Order by end_date descending
+            ->first();           // Get the first record (most recent)
+
+        // Check if agreement exists and is expired
+        if (!$agreement || $agreement->end_date >= now()) {
+            return response()->json([
+                'message' => __('app_translation.agreement_exists'),
+                'errors' => $agreement->end_date // Reset keys for cleaner JSON output
+            ], 404);
+        }
+
         // Log::error($request);
         $ngo = Ngo::findOrFail($id);
+        $checklist =  $this->checkList($request, $id);
+        if ($checklist) {
+            return $checklist;
+        }
+
 
         Email::where('id', $ngo->email_id)->update(['value' => $validatedData['email']]);
         Contact::where('id', $ngo->contact_id)->update(['value' => $validatedData['contact']]);
@@ -229,7 +256,7 @@ class StoresNgoController extends Controller
         // $ngo->ngo_type_id  = $validatedData["type.id"];
         $ngo->moe_registration_no  = $validatedData["moe_registration_no"];
         $ngo->place_of_establishment   = $validatedData["country"]["id"];
-        $ngo->establishment_date  = $validatedData["establishment_date"];
+        $ngo->date_of_establishment  = $validatedData["establishment_date"];
         $ngo_addres->province_id  = $validatedData["province"]["id"];
         $ngo_addres->district_id  = $validatedData["district"]["id"];
         $ngo_addres_en->area = $validatedData["area_english"];
@@ -258,6 +285,7 @@ class StoresNgoController extends Controller
         $ngo_addres_en->save();
         $ngo_addres_ps->save();
         $ngo_addres_fa->save();
+        $ngo->save();
 
         // **Fix agreement creation**
         $agreement = Agreement::create([
@@ -308,6 +336,63 @@ class StoresNgoController extends Controller
         $task->delete();
     }
 
+    protected function checkList($request, $ngo_id)
+    {
+        $user = $request->user();
+        $user_id = $user->id;
+        $role = $user->role_id;
+        $task_type = TaskTypeEnum::ngo_registeration;
+
+        $task = PendingTask::where('user_id', $user_id)
+            ->where('user_type', $role)
+            ->where('task_type', $task_type)
+            ->where('task_id', $ngo_id)
+            ->first();
+
+        // Ensure task exists before proceeding
+        if (!$task) {
+            return response()->json([
+                'error' => __('app_translation.task_not_found')
+            ], 404);
+        }
+
+        // Get checklist IDs
+        $checkListIds = CheckList::where('check_list_type_id', CheckListTypeEnum::externel)
+            ->pluck('id')
+            ->toArray();
+
+        // Get checklist IDs from documents
+        $documentCheckListIds = PendingTaskDocument::where('pending_task_id', $task->id)
+            ->pluck('check_list_id')
+            ->toArray();
+
+        // Log values properly
+        // Log::info('Checklist Debug:', [
+        //     'document_checklist_ids' => $documentCheckListIds,
+        //     'required_checklist_ids' => $checkListIds
+        // ]);
+
+        // Find missing checklist IDs
+        $missingCheckListIds = array_diff($checkListIds, $documentCheckListIds);
+
+        if (count($missingCheckListIds) > 0) {
+            // Retrieve missing checklist names
+            $missingCheckListNames = CheckListTrans::whereIn('check_list_id', $missingCheckListIds)
+                ->where('language_name', app()->getLocale()) // If multilingual, get current language
+                ->pluck('value');
+
+
+            $errors = [];
+            foreach ($missingCheckListNames as $item) {
+                array_push($errors, [__('app_translation.checklist_not_found') . ' ' . $item]);
+            }
+
+            return response()->json([
+                'message' => __('app_translation.checklist_not_found'),
+                'errors' => $errors // Reset keys for cleaner JSON output
+            ], 400);
+        }
+    }
     protected function documentStore($request, $agreement_id, $ngo_id)
     {
         $user = $request->user();
@@ -326,26 +411,7 @@ class StoresNgoController extends Controller
             return response()->json(['error' => 'No pending task found'], 404);
         }
         // Get checklist IDs
-        $checkListIds = CheckList::where('check_list_type_id', CheckListTypeEnum::externel)
-            ->pluck('id')
-            ->toArray();
 
-        // Get checklist IDs from documents
-        $documentCheckListIds = PendingTaskDocument::where('pending_task_id', $task->id)
-            ->pluck('check_list_id')
-            ->toArray();
-
-        // Log::info('Global Exception =>' . $documentCheckListIds . '--------' . $checkListIds);
-
-
-        $missingCheckListIds = array_diff($checkListIds, $documentCheckListIds);
-
-        if (!empty($missingCheckListIds)) {
-            return response()->json([
-                'error' => __('app_translation.checklist_not_found'),
-                'missing_check_list_ids' => $missingCheckListIds
-            ], 400);
-        }
 
 
         $documents = PendingTaskDocument::join('check_lists', 'check_lists.id', 'pending_task_documents.check_list_id')

@@ -2,7 +2,6 @@
 <?php
 
 use App\Enums\PermissionEnum;
-use App\Http\Controllers\api\app\director\DirectorController;
 use App\Http\Controllers\api\app\ngo\DeletesNgoController;
 use App\Http\Controllers\api\app\ngo\StoresNgoController;
 use App\Http\Controllers\api\app\ngo\ViewsNgoController;
@@ -12,9 +11,12 @@ use Illuminate\Support\Facades\Route;
 
 
 
+Route::get('/ngo/more/information/{id}', [ViewsNgoController::class, 'ngoMoreInformation']);
+Route::get('/ngo/checklist/documents/{id}', [ViewsNgoController::class, 'ngoCheckListDocument']);
+
 
 Route::prefix('v1')->group(function () {
-  Route::get('public/ngos/{page}', [ViewsNgoController::class, 'ngosPublic']);
+  Route::get('public/ngos/{page}', [ViewsNgoController::class, 'publicNgos']);
   Route::get('ngos/storePersonalDetial/{id}', [ViewsNgoController::class, 'storePersonalDetial']);
   Route::get('ngos/personalDetail/{id}', [ViewsNgoController::class, 'personalDetial']);
 });
@@ -29,12 +31,11 @@ Route::prefix('v1')->middleware(['api.key', "authorized:" . 'user:api'])->group(
   Route::get('/ngo/{id}', [ViewsNgoController::class, 'ngo'])->middleware(["hasViewPermission:" . PermissionEnum::ngo->value]);
   Route::post('/ngo/store', [StoresNgoController::class, 'store'])->middleware(["hasAddPermission:" . PermissionEnum::ngo->value]);
 
+  // use for step 1 data retrive
   Route::get('/ngo/details/{id}', [ViewsNgoController::class, 'ngoDetail']);
 });
 
 // ngo user 
 
 
-Route::prefix('v1')->middleware(['api.key', "authorized:" . 'ngo:api'])->group(function () {
-  Route::get('/ngo/{id}', [ViewsNgoController::class, 'ngo']);
-});
+Route::prefix('v1')->middleware(['api.key', "authorized:" . 'ngo:api'])->group(function () {});

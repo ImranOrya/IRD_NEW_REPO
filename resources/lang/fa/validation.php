@@ -4,6 +4,19 @@ return [
     'required' => ':attribute مورد نیاز است.',
     'unique' => ':attribute قبلا گرفته شده است.',
     'email' => ':attribute باید معتبر باشد',
+    'max' => [
+        'string' => ':attribute ممکن است بیشتر از :max کاراکتر نباشد.',
+        'file' => ':attribute ممکن است بیشتر از :max کیلوبایت نباشد.',
+        'numeric' => ':attribute ممکن است بیشتر از :max نباشد.',
+        'array' => ':attribute ممکن است بیشتر از :max مورد نداشته باشد.',
+    ],
+    'min' => [
+        'string' => ':attribute باید حداقل :min کاراکتر باشد.',
+        'file' => ':attribute باید حداقل :min کیلوبایت باشد.',
+        'numeric' => ':attribute باید حداقل :min باشد.',
+        'array' => ':attribute باید حداقل :min مورد داشته باشد.',
+    ],
+
     'attributes' => [
         'email' => 'ایمیل',
         'farsi' => 'فارسی',
@@ -24,5 +37,8 @@ return [
         "contact" => "شماره تلفن",
         "director_contact" => "شماره تماس رئیس",
         "director_email" => "ایمیل رئیس",
+        "surname_english" => "نام خانوادگی به انگلیسی",
+        "surname_farsi" => "نام خانوادگی به فارسی",
+        "surname_pashto" => "نام خانوادگی به پشتو",
     ],
 ];

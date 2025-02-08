@@ -12,10 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 class EditesNgoController extends Controller
 {
-    //
-
-
-      public function profileUpdate(NgoProfileUpdateRequest $request, $id)
+    public function profileUpdate(NgoProfileUpdateRequest $request, $id)
     {
 
 
@@ -90,11 +87,13 @@ class EditesNgoController extends Controller
 
         // Instantiate DirectorController and call its store method
         $directorController = new \App\Http\Controllers\api\app\director\DirectorController();
-        $directorController->store($request, $id);
+        // $directorController->store($request, $id);
 
         // store document
         // Commit transaction
         DB::commit();
         return response()->json(['message' => __('app_translation.success')], 200);
     }
+
+   
 }

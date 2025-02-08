@@ -108,7 +108,7 @@ class FileController extends Controller
 
         $this->pendingDocument($data);
 
-        return response()->json($data, 201);
+        return response()->json($data, 200);
     }
 
     /**
