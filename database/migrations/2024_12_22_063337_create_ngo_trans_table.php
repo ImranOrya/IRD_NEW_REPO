@@ -26,7 +26,6 @@ return new class extends Migration
             $table->longText('mission')->nullable();
             $table->longText('general_objective')->nullable();
             $table->longText('objective')->nullable();
-            $table->longText('introduction')->nullable();
             $table->timestamps();
         });
     }

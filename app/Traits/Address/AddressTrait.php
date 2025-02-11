@@ -8,11 +8,14 @@ use App\Models\AddressTran;
 use App\Models\Country;
 use App\Models\District;
 use App\Models\Province;
+use App\Models\Translate;
 use App\Models\User;
 use Mpdf\Config\ConfigVariables;
 use Mpdf\Config\FontVariables;
 use Mpdf\Mpdf;
 use PHPUnit\Framework\Constraint\Count;
+
+use function Laravel\Prompts\select;
 
 trait AddressTrait
 {
@@ -78,9 +81,8 @@ trait AddressTrait
         if ($lang == LanguageEnum::default->value) {
             $country = Country::select('name')->where('id', $country_id)->first();
         } else {
-            $country = Country::join('translates', 'translable_id', 'countries.id')
-                ->where('translable_type', Country::class)
-                ->where('countries.id', $country_id)
+            $country = Translate::where('translable_type', Country::class)
+                ->where('translable_id', $country_id)
                 ->where('language_name', $lang)
                 ->select('value as name')->first();
         }
@@ -149,4 +151,25 @@ trait AddressTrait
         return $translations;
     }
     // Added by ME
+    public function getAddressTrans($province_id, $district_id, $lang)
+    {
+        $province = [];
+        $district = [];
+        if ($lang == LanguageEnum::default->value) {
+            $province = Province::find($province_id)->select('name')->first();
+            $district = District::find($district_id)->select('name')->first();
+        } else {
+            $province = Translate::where('translable_type', Province::class)->where('translable_id', $province_id)
+                ->where('language_name', $lang)
+                ->select('value as name')->first();
+            $district = Translate::where('translable_type', District::class)->where('translable_id', $district_id)
+                ->where('language_name', $lang)
+                ->select('value as name')->first();
+        }
+
+        return [
+            'province' => ["id" => $province_id, "name" => $province['name']],
+            'district' => ["id" => $district_id, "name" => $district['name']],
+        ];
+    }
 }

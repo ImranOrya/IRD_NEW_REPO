@@ -33,4 +33,5 @@ return [
     "address_not_found" => "Address Not found.",
     "ngo_not_found" => "Ngo Not found.",
     "agreement_exists" => "Agreement Exists",
+    "ngo_trans_not_found" => "NGO Translation Not found.",
 ];

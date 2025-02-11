@@ -2,18 +2,22 @@
 
 namespace App\Http\Controllers\api\template;
 
+use App\Enums\LanguageEnum;
+use App\Enums\StaffEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\template\office\OfficeStoreRequest;
 use App\Http\Requests\template\office\OfficeUpdateRequest;
 use App\Http\Requests\template\office\StaffStoreRequest;
 use App\Http\Requests\template\office\StaffUpdateRequest;
 use App\Models\OfficeInformation;
+use App\Models\Slider;
 use App\Models\Staff;
-use App\Enums\StaffEnum;
 use App\Models\StaffTran;
-use App\Enums\LanguageEnum;
+
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+
 
 class AboutController extends Controller
 {
@@ -417,5 +421,70 @@ class AboutController extends Controller
                 "picture" => $profile,
             ]
         ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    public function sliderStore(Request $request)
+    {
+
+
+        $request->validate([
+
+            'picture' => 'required|mimes:png,jpg',
+        ]);
+
+        $document = $this->storeDocument($request, "public", "slider", 'picture');
+
+        Slider::create([
+            "is_active" => 1,
+            "path" => $document['path'],
+            "name" => 'slider',
+        ]);
+        return response()->json(
+            [
+                'message' => __('app_translation.success'),
+                'slider' => [
+                    "picture" => $document['path'],
+                ]
+            ],
+            200,
+            [],
+            JSON_UNESCAPED_UNICODE
+        );
+    }
+
+    public function sliders()
+    {
+
+        $sliders =    Slider::select('id', 'path', 'is_active')->get();
+
+        return response()->json([
+            "slider" => $sliders,
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    public function publicSliders()
+    {
+
+        $sliders =    Slider::select('id', 'path')->where('is_active', 1)->get();
+
+        return response()->json([
+            "slider" => $sliders,
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
+    public function changeStatusSlider(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:sliders,id', // Ensure the slider exists
+            'is_active' => 'required|in:1,0'
+        ]);
+
+        $slider = Slider::find($request->slider_id);
+        $slider->is_active = $request->is_active;
+        $slider->save();
+
+        return response()->json([
+            'message' => __('app_translation.update'),
+            'slider' => $slider
+        ]);
     }
 }

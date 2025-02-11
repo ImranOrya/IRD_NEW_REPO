@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->middleware(['api.key', "authorized:" . 'user:api'])->group(function () {
     Route::get('/users/record/count', [UserController::class, "userCount"]);
-    Route::get('/users/{page}', [UserController::class, "users"])->middleware(["hasViewPermission:" . PermissionEnum::users->value]);
+    Route::get('/users', [UserController::class, "users"])->middleware(["hasViewPermission:" . PermissionEnum::users->value]);
     Route::get('/user/{id}', [UserController::class, "user"])->middleware(['accessUserCheck', "hasViewPermission:" . PermissionEnum::users->value]);
     Route::post('/user/change-password', [UserController::class, 'changePassword'])->middleware(['accessUserCheck', "hasEditPermission:" . PermissionEnum::users->value]);
     Route::delete('/user/delete-profile/{id}', [UserController::class, 'deleteProfile'])->middleware(["hasDeletePermission:" . PermissionEnum::users->value]);

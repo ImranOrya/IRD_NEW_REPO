@@ -26,7 +26,7 @@ use App\Http\Requests\template\user\UpdateUserPasswordRequest;
 
 class UserController extends Controller
 {
-    public function users(Request $request, $page)
+    public function users(Request $request)
     {
         $locale = App::getLocale();
         $tr = [];

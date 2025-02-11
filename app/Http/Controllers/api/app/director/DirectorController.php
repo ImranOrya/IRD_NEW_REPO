@@ -196,6 +196,7 @@ class DirectorController extends Controller
                 'message' => __('app_translation.director_not_found'),
             ], 404, [], JSON_UNESCAPED_UNICODE);
         }
+        DB::beginTransaction();
         // 2. Get Email
         $email = Email::where('value', $request->email)
             ->select('id', 'value')->first();
@@ -228,7 +229,6 @@ class DirectorController extends Controller
                 'message' => __('app_translation.address_not_found'),
             ], 404, [], JSON_UNESCAPED_UNICODE);
         }
-        DB::beginTransaction();
         // 4. If is_active is true make other directors false
         if ($request->is_active == true)
             Director::where('is_active', true)

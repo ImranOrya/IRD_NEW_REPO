@@ -15,10 +15,14 @@ use App\Models\Country;
 use App\Models\NgoTran;
 use App\Enums\StaffEnum;
 use App\Models\Director;
+use App\Models\District;
+use App\Models\Document;
 use App\Models\Province;
+use App\Models\Agreement;
 use App\Models\CheckList;
 use App\Models\Translate;
 use App\Enums\LanguageEnum;
+use App\Models\AddressTran;
 use App\Models\NidTypeTrans;
 use Illuminate\Http\Request;
 use App\Models\StatusTypeTran;
@@ -28,6 +32,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\App;
 use App\Traits\Address\AddressTrait;
 use App\Repositories\ngo\NgoRepositoryInterface;
+use Carbon\Carbon;
 
 class TestController extends Controller
 {
@@ -41,25 +46,168 @@ class TestController extends Controller
     public function index(Request $request)
     {
         $locale = App::getLocale();
-        $query = $this->ngoRepository->ngo();  // Start with the base query
-        $this->ngoRepository->emailJoin($query)
-            ->contactJoin($query)
-            ->addressJoin($query);
+        $query = $this->ngoRepository->ngo(4);  // Start with the base query
+        $this->ngoRepository->statusJoin($query)
+            ->emailJoin($query)
+            ->contactJoin($query);
         $ngo = $query->select(
-            'n.abbr',
-            'n.ngo_type_id',
+            'n.profile',
+            'ns.status_type_id as status_id',
+            'n.username',
+            'c.value as contact',
+            'e.value as email'
+        )->first();
+        if (!$ngo) {
+            return response()->json([
+                'message' => __('app_translation.ngo_not_found'),
+            ], 404, [], JSON_UNESCAPED_UNICODE);
+        }
+        $result = [
+            "profile" => $ngo->profile,
+            "status_id" => $ngo->status_id,
+            "username" => $ngo->username,
+            "contact" => $ngo->contact,
+            "email" => $ngo->email,
+            "registration_expired" => false,
+        ];
+        // 2. Check NGO agreement expiration
+        $agreement = Agreement::where('ngo_id', 4)
+            ->latest('end_date')
+            ->select('end_date')
+            ->first();
+        if ($agreement) {
+            // Check Registration is expired
+            $result = $result['registration_expired'] = Carbon::parse($agreement->end_date)->isPast();
+            $result['registration_expired'] = Carbon::parse($agreement->end_date)->isPast();
+
+        }
+
+        return $result;
+
+        $includes = [StatusTypeEnum::active->value, StatusTypeEnum::blocked->value];
+        return $statusesType = DB::table('status_types as st')
+            ->whereIn('st.id', $includes)
+            ->leftjoin('status_type_trans as stt', function ($join) use ($locale, $includes) {
+                $join->on('stt.status_type_id', '=', 'st.id')
+                    ->where('stt.language_name', $locale);
+            })
+            ->select('st.id', 'stt.name')->get();
+
+
+        $ngoTrans = NgoTran::where('ngo_id', 1)->get();
+        return $ngoTrans->where('language_name', "en")->first();
+
+        $query = $this->ngoRepository->ngo(4);  // Start with the base query
+        $this->ngoRepository->transJoinLocales($query);
+        $ngos = $query->select(
+            'nt.vision',
+            'nt.mission',
+            'nt.general_objective',
+            'nt.objective',
+            'nt.language_name'
+        )->get();
+
+        $result = [];
+        foreach ($ngos as $item) {
+            $language = $item->language_name;
+
+            if ($language === LanguageEnum::default->value) {
+                $result['vision_english'] = $item->vision;
+                $result['mission_english'] = $item->mission;
+                $result['general_objes_english'] = $item->general_objective;
+                $result['objes_in_afg_english'] = $item->objective;
+            } elseif ($language === LanguageEnum::farsi->value) {
+                $result['vision_farsi'] = $item->vision;
+                $result['mission_farsi'] = $item->mission;
+                $result['general_objes_farsi'] = $item->general_objective;
+                $result['objes_in_afg_farsi'] = $item->objective;
+            } else {
+                $result['vision_pashto'] = $item->vision;
+                $result['mission_pashto'] = $item->mission;
+                $result['general_objes_farsi'] = $item->general_objective;
+                $result['objes_in_afg_farsi'] = $item->objective;
+            }
+        }
+
+        return $result;
+
+        $ngo_id = 8;
+        $query = $this->ngoRepository->ngo($ngo_id);
+        $this->ngoRepository->agreementJoin($query);
+        $agreement =  $query->select('ag.id')
+            ->first();
+
+
+        return $document =  Document::join('agreement_documents as agd', 'agd.document_id', 'documents.id')
+            ->where('agd.agreement_id', $agreement->id)
+            ->join('check_lists as cl', function ($join) {
+                $join->on('documents.check_list_id', '=', 'cl.id');
+            })
+            ->join('check_list_trans as clt', function ($join) use ($locale) {
+                $join->on('clt.check_list_id', '=', 'cl.id')
+                    ->where('language_name', $locale);
+            })
+            ->select(
+                'documents.path',
+                'documents.size',
+                'documents.check_list_id as checklist_id',
+                'documents.type',
+                'documents.actual_name',
+                'clt.value as checklist_name',
+                'cl.acceptable_extensions',
+                'cl.acceptable_mimes'
+            )
+            ->get();
+
+        $checklistMap = [];
+
+        foreach ($document as $doc) {
+            $checklistMap[] = [
+                (int) $doc->check_list_id,  // First item in array (checklist ID)
+                [
+                    'name' => $doc->actual_name,
+                    'size' => $doc->size,
+                    'check_list_id' => (string) $doc->check_list_id,
+                    'extension' => $doc->type,
+                    'path' => $doc->path,
+                ],
+            ];
+        }
+
+        return response()->json([
+            'message' => __('app_translation.success'),
+            'checklistMap' => $checklistMap,
+
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+
+        $addresses = AddressTran::where('address_id', 6)->get();
+        return  $addresses->where('language_name', "en")->first();
+
+        $locale = App::getLocale();
+        $query = $this->ngoRepository->ngo();  // Start with the base query
+        $this->ngoRepository->transJoin($query, $locale)
+            ->statusJoin($query)
+            ->statusTypeTransJoin($query, $locale)
+            ->typeTransJoin($query, $locale)
+            ->directorJoin($query)
+            ->directorTransJoin($query, $locale)
+            ->emailJoin($query)
+            ->contactJoin($query);
+        $query->select(
+            'n.id',
             'n.registration_no',
-            'n.moe_registration_no',
-            'n.place_of_establishment',
-            'n.date_of_establishment',
-            'a.province_id',
-            'a.district_id',
-            'a.id as address_id',
+            'n.date_of_establishment as establishment_date',
+            'stt.status_type_id as status_id',
+            'stt.name as status',
+            'nt.name',
+            'ntt.ngo_type_id as type_id',
+            'ntt.value as type',
             'e.value as email',
             'c.value as contact',
-        )->where('n.id', 3)->first();
+            'n.created_at'
+        );
 
-        return $ngo;
+        return $query->get();
 
 
 

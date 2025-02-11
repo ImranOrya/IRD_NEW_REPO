@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 
 class NewsController extends Controller
 {
-    public function authNewses(Request $request, $page)
+    public function authNewses(Request $request)
     {
         $perPage = $request->input('per_page', 10); // Number of records per page
         $page = $request->input('page', 1); // Current page
@@ -55,18 +55,6 @@ class NewsController extends Controller
         return response()->json(
             [
                 "newses" => $result,
-                'n.id',
-                'n.visible',
-                'n.date',
-                'n.visibility_date',
-                'n.news_type_id',
-                'ntt.value AS news_type',
-                'n.priority_id',
-                'pt.value AS priority',
-                'us.username AS user',
-                'ntr.title',
-                'ntr.contents',
-                'nd.url AS image'  // Assuming you want the first image URL
             ]
         );
     }
@@ -131,7 +119,7 @@ class NewsController extends Controller
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 
-    public function publicNewses(Request $request, $page)
+    public function publicNewses(Request $request)
     {
         $perPage = $request->input('per_page', 10); // Number of records per page
         $page = $request->input('page', 1); // Current page

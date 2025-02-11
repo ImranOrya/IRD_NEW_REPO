@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers\api\app\ngo;
 
+use Carbon\Carbon;
 use App\Models\Ngo;
+use App\Models\Document;
+use App\Models\Agreement;
+use App\Enums\LanguageEnum;
 use App\Models\PendingTask;
 use App\Traits\Ngo\NgoTrait;
 use Illuminate\Http\Request;
@@ -12,9 +16,9 @@ use App\Models\PendingTaskContent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\App;
 use App\Http\Controllers\Controller;
-use App\Models\Document;
 use App\Traits\Address\AddressTrait;
 use App\Repositories\ngo\NgoRepositoryInterface;
+use App\Repositories\Task\PendingTaskRepositoryInterface;
 
 class ViewsNgoController extends Controller
 {
@@ -22,13 +26,17 @@ class ViewsNgoController extends Controller
     use AddressTrait, NgoTrait;
 
     protected $ngoRepository;
+    protected $pendingTaskRepository;
 
-    public function __construct(NgoRepositoryInterface $ngoRepository)
-    {
+    public function __construct(
+        PendingTaskRepositoryInterface $pendingTaskRepository,
+        NgoRepositoryInterface $ngoRepository
+    ) {
         $this->ngoRepository = $ngoRepository;
+        $this->pendingTaskRepository = $pendingTaskRepository;
     }
 
-    public function ngos(Request $request, $page)
+    public function ngos(Request $request)
     {
         $perPage = $request->input('per_page', 10); // Number of records per page
         $page = $request->input('page', 1); // Current page
@@ -39,8 +47,6 @@ class ViewsNgoController extends Controller
             ->statusJoin($query)
             ->statusTypeTransJoin($query, $locale)
             ->typeTransJoin($query, $locale)
-            ->directorJoin($query)
-            ->directorTransJoin($query, $locale)
             ->emailJoin($query)
             ->contactJoin($query);
         $query->select(
@@ -67,7 +73,7 @@ class ViewsNgoController extends Controller
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 
-    public function publicNgos(Request $request, $page)
+    public function publicNgos(Request $request)
     {
         $perPage = $request->input('per_page', 10); // Number of records per page
         $page = $request->input('page', 1); // Current page
@@ -103,108 +109,42 @@ class ViewsNgoController extends Controller
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 
-    public function ngoInit(Request $request, $ngo_id)
+    public function startRegisterForm(Request $request, $ngo_id)
     {
         $locale = App::getLocale();
 
-        $personalDetail = $this->personalDetial($request, $ngo_id);
-        if ($personalDetail['content']) {
+        $pendingTaskContent = $this->pendingTask($request, $ngo_id);
+        if ($pendingTaskContent['content']) {
             return response()->json([
                 'message' => __('app_translation.success'),
-                'content' => $personalDetail['content']
+                'content' => $pendingTaskContent['content']
             ], 200);
         }
 
-        // Joining necessary tables to fetch the NGO data
-        $ngo = $this->ngoRepository->getNgoInit($locale, $ngo_id);
-        // Handle NGO not found
-        if (!$ngo) {
+        $query = $this->ngoRepository->ngo($ngo_id);
+        $data = $this->ngoRepository->startRegisterFormInfo($query, $ngo_id, $locale);
+        if (!$data) {
             return response()->json([
                 'message' => __('app_translation.ngo_not_found'),
             ], 404);
         }
-
-        // Fetching translations using a separate query
-        $translations = $this->ngoNameTrans($ngo_id);
-        $areaTrans = $this->getAddressAreaTran($ngo->address_id);
-        $address = $this->getCompleteAddress($ngo->address_id, $locale);
-
-
-        $data = [
-            'name_english' => $translations['en']->name ?? null,
-            'name_pashto' => $translations['ps']->name ?? null,
-            'name_farsi' => $translations['fa']->name ?? null,
-            'abbr' => $ngo->abbr,
-            'type' => ['name' => $ngo->type_name, 'id' => $ngo->ngo_type_id],
-            'contact' => $ngo->contact,
-            'email' =>   $ngo->email,
-            'registration_no' => $ngo->registration_no,
-            'province' => ['name' => $address['province'], 'id' => $ngo->province_id],
-            'district' => ['name' => $address['district'], 'id' => $ngo->district_id],
-            'area_english' => $areaTrans['en']->area ?? '',
-            'area_pashto' => $areaTrans['ps']->area ?? '',
-            'area_farsi' => $areaTrans['fa']->area ?? '',
-        ];
 
         return response()->json([
             'message' => __('app_translation.success'),
             'ngo' => $data,
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
+
     public function ngoDetail($ngo_id)
     {
         $locale = App::getLocale();
-        $query = $this->ngoRepository->ngo();  // Start with the base query
-        $this->ngoRepository->typeTransJoin($query, $locale)
-            ->emailJoin($query)
-            ->contactJoin($query)
-            ->addressJoin($query);
-        $ngo = $query->select(
-            'n.abbr',
-            'n.ngo_type_id',
-            'ntt.value as type_name',
-            'n.registration_no',
-            'n.moe_registration_no',
-            'n.place_of_establishment',
-            'n.date_of_establishment',
-            'a.province_id',
-            'a.district_id',
-            'a.id as address_id',
-            'e.value as email',
-            'c.value as contact'
-        )->where('n.id', $ngo_id)->first();
-
-        // Handle NGO not found
-        if (!$ngo) {
+        $query = $this->ngoRepository->ngo($ngo_id);  // Start with the base query
+        $data = $this->ngoRepository->afterRegisterFormInfo($query, $ngo_id, $locale);
+        if (!$data) {
             return response()->json([
                 'message' => __('app_translation.ngo_not_found'),
             ], 404);
         }
-
-        // Fetching translations using a separate query
-        $translations = $this->ngoNameTrans($ngo_id);
-        $areaTrans = $this->getAddressAreaTran($ngo->address_id);
-        $address = $this->getCompleteAddress($ngo->address_id, $locale);
-
-        $data = [
-            'name_english' => $translations['en']->name ?? null,
-            'name_pashto' => $translations['ps']->name ?? null,
-            'name_farsi' => $translations['fa']->name ?? null,
-            'abbr' => $ngo->abbr,
-            'registration_no' => $ngo->registration_no,
-            'moe_registration_no' => $ngo->moe_registration_no,
-            'date_of_establishment' => $ngo->date_of_establishment,
-            'type' => ['name' => $ngo->type_name, 'id' => $ngo->ngo_type_id],
-            'establishment_date' => $ngo->date_of_establishment,
-            'place_of_establishment' => ['name' => $this->getCountry($ngo->place_of_establishment, $locale), 'id' => $ngo->place_of_establishment],
-            'contact' => $ngo->contact,
-            'email' => $ngo->email,
-            'province' => ['name' => $address['province'], 'id' => $ngo->province_id],
-            'district' => ['name' => $address['district'], 'id' => $ngo->district_id],
-            'area_english' => $areaTrans['en']->area ?? '',
-            'area_pashto' => $areaTrans['ps']->area ?? '',
-            'area_farsi' => $areaTrans['fa']->area ?? '',
-        ];
 
         return response()->json([
             'message' => __('app_translation.success'),
@@ -212,57 +152,14 @@ class ViewsNgoController extends Controller
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 
-    protected function paginatePublic($data, $perPage, $page)
+    public function pendingTask(Request $request, $id): array
     {
-        // Paginates manually after mapping the provinces
-        $offset = ($page - 1) * $perPage;
-        $paginatedData = $data->slice($offset, $perPage); // Slice the data for pagination
-        return new \Illuminate\Pagination\LengthAwarePaginator(
-            $paginatedData,
-            $data->count(),
-            $perPage,
-            $page,
-            ['path' => url()->current()]  // Set path for the paginator links
-        );
-    }
-    // search function 
-    protected function applySearchPublic($query, $request)
-    {
-
-        $searchColumn = $request->input('filters.search.column');
-        $searchValue = $request->input('filters.search.value');
-
-        if ($searchColumn && $searchValue) {
-            $allowedColumns = ['name', 'abbr'];
-
-            // Ensure that the search column is allowed
-            if (in_array($searchColumn, $allowedColumns)) {
-                $query->where($searchColumn, 'like', '%' . $searchValue . '%');
-            }
-        }
-    }
-    // filter function
-    protected function applyFiltersPublic($query, $request)
-    {
-        $sort = $request->input('filters.sort'); // Sorting column
-        $order = $request->input('filters.order', 'asc'); // Sorting order (default 
-        // Default sorting if no sort is provided
-        $query->orderBy("created_at", 'desc');
-    }
-
-    public function personalDetial(Request $request, $id): array
-    {
-        $user = $request->user();
-        $user_id = $user->id;
-        $role = $user->role_id;
-        $task_type = TaskTypeEnum::ngo_registeration;
-
         // Retrieve the first matching pending task
-        $task = PendingTask::where('user_id', $user_id)
-            ->where('user_type', $role)
-            ->where('task_type', $task_type)
-            ->where('task_id', $id)
-            ->first();
+        $task = $this->pendingTaskRepository->pendingTaskExist(
+            $request->user(),
+            TaskTypeEnum::ngo_registeration,
+            $id,
+        );
 
         if ($task) {
             // Fetch and concatenate content
@@ -271,7 +168,6 @@ class ViewsNgoController extends Controller
                 ->orderBy('id', 'desc')
                 ->first();
             return [
-                // 'max_step' => $maxStep,
                 'content' => $pendingTask ? $pendingTask->content : null
             ];
         }
@@ -281,74 +177,71 @@ class ViewsNgoController extends Controller
         ];
     }
 
-
-    public function ngoMoreInformation($id)
+    public function moreInformation($id)
     {
-        $ngo = Ngo::join('ngo_trans as en', function ($join) {
-            $join->on('ngos.id', '=', 'en.ngo_id')->where('en.language_name', 'en');
-        })
-            ->join('ngo_trans as ps', function ($join) {
-                $join->on('ngos.id', '=', 'ps.ngo_id')->where('ps.language_name', 'ps');
-            })
-            ->join('ngo_trans as fa', function ($join) {
-                $join->on('ngos.id', '=', 'fa.ngo_id')->where('fa.language_name', 'fa');
-            })->select(
+        $query = $this->ngoRepository->ngo($id);  // Start with the base query
+        $this->ngoRepository->transJoinLocales($query);
+        $ngos = $query->select(
+            'nt.introduction',
+            'nt.vision',
+            'nt.mission',
+            'nt.general_objective',
+            'nt.objective',
+            'nt.language_name'
+        )->get();
 
-                'en.vision as vision_english',
-                'ps.vision as vision_pashto',
-                'fa.vision as vision_farsi',
-                'en.mission as mission_english',
-                'ps.mission as mission_pashto',
-                'fa.mission as mission_farsi',
-                'en.general_objective as general_objes_english',
-                'ps.general_objective as general_objes_pashto',
-                'fa.general_objective as general_objes_farsi',
-                'en.objective as objes_in_afg_english',
-                'ps.objective as objes_in_afg_pashto',
-                'fa.objective as objes_in_afg_farsi',
-            )->where('ngos.id', $id)->get();
+        $result = [];
+        foreach ($ngos as $item) {
+            $language = $item->language_name;
 
-
-        return response()->json([
-            'message' => __('app_translation.success'),
-            'ngo' => $ngo,
-
-        ], 200, [], JSON_UNESCAPED_UNICODE);
-
-        // return $ngo;
-    }
-
-    public function ngoCheckListDocument($id)
-    {
-
-        $agreement = Ngo::leftJoin('agreements', function ($join) {
-            $join->on('ngos.id', '=', 'agreements.ngo_id')->orderByDesc('agreements.end_date')->limit(1);
-        })->where('ngos.id', $id)->select('agreements.id')->first();
-
-
-        $document =   Document::join('agreement_documents', 'agreement_documents.document_id', 'documents.id')
-            ->where('agreement_documents.agreement_id', $agreement->id)
-            ->select('documents.path', 'documents.size', 'check_list_id', 'documents.type', 'actual_name')
-            ->get();
-
-        $checklistMap = [];
-
-        foreach ($document as $doc) {
-            $checklistMap[] = [
-                (int) $doc->check_list_id,  // First item in array (checklist ID)
-                [
-                    'name' => $doc->actual_name,
-                    'size' => $doc->size,
-                    'check_list_id' => (string) $doc->check_list_id,
-                    'extension' => $doc->type,
-                    'path' => $doc->path,
-                ],
-            ];
+            if ($language === LanguageEnum::default->value) {
+                $result['intro_english'] = $item->introduction;
+                $result['vision_english'] = $item->vision;
+                $result['mission_english'] = $item->mission;
+                $result['general_objes_english'] = $item->general_objective;
+                $result['objes_in_afg_english'] = $item->objective;
+            } elseif ($language === LanguageEnum::farsi->value) {
+                $result['intro_farsi'] = $item->introduction;
+                $result['vision_farsi'] = $item->vision;
+                $result['mission_farsi'] = $item->mission;
+                $result['general_objes_farsi'] = $item->general_objective;
+                $result['objes_in_afg_farsi'] = $item->objective;
+            } else {
+                $result['intro_pashto'] = $item->introduction;
+                $result['vision_pashto'] = $item->vision;
+                $result['mission_pashto'] = $item->mission;
+                $result['general_objes_pashto'] = $item->general_objective;
+                $result['objes_in_afg_pashto'] = $item->objective;
+            }
         }
 
         return response()->json([
-            'message' => __('app_translation.success'),
-            'checklistMap' => $checklistMap,
+            'ngo' => $result,
+
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
+    public function statuses($id)
+    {
+        $locale = App::getLocale();
+
+        $result = $this->ngoRepository->statuses($id, $locale);
+
+        return response()->json([
+            'statuses' => $result,
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    public function agreementDocuments(Request $request)
+    {
+        $ngo_id = $request->input('ngo_id');
+        $agreement_id = $request->input('agreement_id');
+
+        $locale = App::getLocale();
+        $query = $this->ngoRepository->ngo($ngo_id);
+        $documents = $this->ngoRepository->agreementDocuments($query, $agreement_id, $locale);
+
+        return response()->json([
+            'agreement_documents' => $documents,
 
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
@@ -577,7 +470,47 @@ class ViewsNgoController extends Controller
         );
     }
 
+    public function headerInfo($ngo_id)
+    {
+        // 1. Get ngo information
+        $query = $this->ngoRepository->ngo($ngo_id);  // Start with the base query
+        $this->ngoRepository->statusJoin($query)
+            ->emailJoin($query)
+            ->contactJoin($query);
+        $ngo = $query->select(
+            'n.profile',
+            'ns.status_type_id as status_id',
+            'n.username',
+            'c.value as contact',
+            'e.value as email'
+        )->first();
+        if (!$ngo) {
+            return response()->json([
+                'message' => __('app_translation.ngo_not_found'),
+            ], 404, [], JSON_UNESCAPED_UNICODE);
+        }
+        $result = [
+            "profile" => $ngo->profile,
+            "status_id" => $ngo->status_id,
+            "username" => $ngo->username,
+            "contact" => $ngo->contact,
+            "email" => $ngo->email,
+            "registration_expired" => false,
+        ];
+        // 2. Check NGO agreement expiration
+        $agreement = Agreement::where('ngo_id', $ngo_id)
+            ->latest('end_date')
+            ->select('end_date')
+            ->first();
+        if ($agreement) {
+            // Check Registration is expired
+            $result['registration_expired'] = Carbon::parse($agreement->end_date)->isPast();
+        }
 
+        return response()->json([
+            'ngo' => $result,
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
     public function ngoCount()
     {
         $statistics = DB::select("

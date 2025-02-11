@@ -4,16 +4,13 @@ namespace App\Repositories\ngo;
 
 interface NgoRepositoryInterface
 {
-    public function getNgoInit($locale, $ngo_id);
-    public function getNgoDetail($locale, $ngo_id);
     /**
      * Retrieve NGO data.
      * cast is n
-     *
-     * @param \Illuminate\Database\Query\Builder $query
+     * @param string $id
      * @return \App\Repositories\ngo\NgoRepositoryInterface|\Illuminate\Database\Query\Builder
      */
-    public function ngo();
+    public function ngo($id = null);
     /**
      * Retrieve NGO Translation data.
      * cast is nt
@@ -24,6 +21,14 @@ interface NgoRepositoryInterface
      */
     public function transJoin($query, $locale);
     /**
+     * Retrieve NGO all Translation data.
+     * cast is nt
+     *
+     * @param \Illuminate\Database\Query\Builder $query
+     * @return \App\Repositories\ngo\NgoRepositoryInterface|\Illuminate\Database\Query\Builder
+     */
+    public function transJoinLocales($query);
+    /**
      * Retrieve NGO Status data.
      * cast is ns
      *
@@ -33,7 +38,17 @@ interface NgoRepositoryInterface
     public function statusJoin($query);
 
     /**
-     * Retrieve NGO Status Translation data.
+     * Retrieve NGO Status All Translations.
+     * cast is ns
+     *
+     * @param \Illuminate\Database\Query\Builder $query
+     * @return \App\Repositories\ngo\NgoRepositoryInterface|\Illuminate\Database\Query\Builder
+     */
+
+    public function statusJoinAll($query);
+
+    /**
+     * Retrieve NGO Status Type Translation data.
      * cast is stt
      *
      * @param \Illuminate\Database\Query\Builder $query
@@ -41,7 +56,6 @@ interface NgoRepositoryInterface
      * @return \App\Repositories\ngo\NgoRepositoryInterface|\Illuminate\Database\Query\Builder
      */
     public function statusTypeTransJoin($query, $locale);
-
     /**
      * Retrieve NGO TypeTrans Translation data.
      * cast is ntt
@@ -94,4 +108,49 @@ interface NgoRepositoryInterface
      * @return \App\Repositories\ngo\NgoRepositoryInterface|\Illuminate\Database\Query\Builder
      */
     public function addressJoin($query);
+    /**
+     * Joins the last agreement.
+     * cast is ag
+     *
+     * @param \Illuminate\Database\Query\Builder $query
+     * @return \App\Repositories\ngo\NgoRepositoryInterface|\Illuminate\Database\Query\Builder
+     */
+    public function agreementJoin($query);
+    /**
+     * Returns agreement documents.
+     * cast is ag
+     *
+     * @param \Illuminate\Database\Query\Builder $query
+     * @return \App\Repositories\ngo\NgoRepositoryInterface|\Illuminate\Database\Query\Builder
+     */
+    public function agreementDocuments($query, $agreement_id, $locale);
+    /**
+     * Retrieve NGO data when registered by IRD.
+     * 
+     *
+     * @param \Illuminate\Database\Query\Builder $query
+     * @param string $ngo_id
+     * @param string $locale
+     * @return \App\Repositories\ngo\NgoRepositoryInterface|\Illuminate\Database\Query\Builder
+     */
+    public function startRegisterFormInfo($query, $ngo_id, $locale);
+    /**
+     * Retrieve NGO data when registeration is completed.
+     * 
+     *
+     * @param \Illuminate\Database\Query\Builder $query
+     * @param string $ngo_id
+     * @param string $locale
+     * @return \App\Repositories\ngo\NgoRepositoryInterface|\Illuminate\Database\Query\Builder
+     */
+    public function afterRegisterFormInfo($query, $ngo_id, $locale);
+    /**
+     * Retrieve NGO all statuses along with tanslations.
+     * 
+     *
+     * @param string $ngo_id
+     * @param string $locale
+     * @return \App\Repositories\ngo\NgoRepositoryInterface|\Illuminate\Database\Query\Builder
+     */
+    public function statuses($ngo_id, $locale);
 }

@@ -33,4 +33,5 @@ return [
     "address_not_found" => "آدرس پیدا نشد.",
     "ngo_not_found" => "موسسه یافت نشد.",
     "agreement_exists" => "تعهد نام موجود است",
+    "ngo_trans_not_found" => "ترجمه موسسه یافت نشد.",
 ];

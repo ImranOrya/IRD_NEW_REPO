@@ -4,7 +4,9 @@ namespace Database\Seeders;
 
 use App\Enums\PriorityEnum;
 use App\Enums\RoleEnum;
+use App\Enums\SettingEnum;
 use App\Enums\StaffEnum;
+use App\Enums\TimeUnitEnum;
 use App\Enums\Type\JobTypeEnum;
 use App\Enums\Type\StatusTypeEnum;
 use App\Models\Contact;
@@ -48,7 +50,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // User::factory(10)->create();
-        $this->languages();
+        // $this->languages();
         $this->settings();
         $this->newsTypes();
         $this->priorityTypes();
@@ -816,30 +818,22 @@ class DatabaseSeeder extends Seeder
 
     public function settings()
     {
-        $day = TimeUnit::factory()->create([
+        $unit = TimeUnit::factory()->create([
+            "id" => TimeUnitEnum::day->value,
             "name" => "Day",
         ]);
-        $this->Translate("روز", "fa", $day->id, TimeUnit::class);
-        $this->Translate("ورځ", "ps", $day->id, TimeUnit::class);
-        $hour = TimeUnit::factory()->create([
-            "name" => "Hour",
-        ]);
-        $this->Translate("ساعت", "fa", $hour->id, TimeUnit::class);
-        $this->Translate("ساعت", "ps", $hour->id, TimeUnit::class);
-        $minute = TimeUnit::factory()->create([
-            "name" => "Minute",
-        ]);
-        $this->Translate("دقیقه", "fa", $minute->id, TimeUnit::class);
-        $this->Translate("دقیقه", "ps", $minute->id, TimeUnit::class);
+        $this->Translate("روز", "fa", $unit->id, TimeUnit::class);
+        $this->Translate("ورځ", "ps", $unit->id, TimeUnit::class);
 
-        $documentLock = Setting::factory()->create([
-            "name" => "document_lock",
-            "value" => "1",
+        $setting = Setting::factory()->create([
+            "id" => SettingEnum::registeration_expire_time->value,
+            "name" => "Register Expiration Deadline",
+            "value" => "365", // days
         ]);
 
         SettingTimeUnit::factory()->create([
-            "time_unit_id" => $day->id,
-            "setting_id" => $documentLock->id,
+            "time_unit_id" => TimeUnitEnum::day->value,
+            "setting_id" => $setting->id,
         ]);
     }
     public function requestTypes()
