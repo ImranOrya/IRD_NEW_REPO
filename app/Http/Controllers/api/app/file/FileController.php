@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers\api\app\file;
 
+use App\Enums\CheckList\CheckListEnum as CheckListCheckListEnum;
+use App\Enums\CheckList\CheckListEnum;
 use App\Enums\CheckListTypeEnum;
-use App\Enums\pdfFooter\CheckListEnum;
 use App\Enums\Type\TaskTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Models\AgreementDocument;
@@ -12,6 +13,7 @@ use App\Models\Document;
 use App\Models\Ngo;
 use App\Models\NgoTran;
 use App\Models\PendingTask;
+use App\Models\PendingTaskContent;
 use App\Models\PendingTaskDocument;
 use Exception;
 use Illuminate\Http\Request;
@@ -78,6 +80,30 @@ class FileController extends Controller
         ]);
     }
 
+    public function uploadNgoFileBeforeStore(Request $request)
+    {
+        $receiver = new FileReceiver("file", $request, HandlerFactory::classFromRequest($request));
+
+        if (!$receiver->isUploaded()) {
+            throw new UploadMissingFileException();
+        }
+
+        $save = $receiver->receive();
+
+        if ($save->isFinished()) {
+            $task_type = TaskTypeEnum::ngo_registeration;
+            // $ngo_id = $request->ngo_id;
+            return $this->saveFileBeforeStore($save->getFile(), $request, $task_type);
+        }
+
+        // If not finished, send current progress.
+        $handler = $save->handler();
+
+        return response()->json([
+            "done" => $handler->getPercentageDone(),
+            "status" => true,
+        ]);
+    }
 
     public function uploadProjectFile(Request $request,)
     {
@@ -132,6 +158,7 @@ class FileController extends Controller
             "status" => true,
         ]);
     }
+
     protected function saveFile(UploadedFile $file, Request $request, $id, $task_type)
     {
         $fileActualName = $file->getClientOriginalName();
@@ -171,9 +198,68 @@ class FileController extends Controller
         return response()->json($data, 200);
     }
 
+
+
     /**
      * Validate file using checklist settings.
      */
+
+    protected function saveFileBeforeStore(UploadedFile $file, Request $request, $task_type)
+    {
+        $fileActualName = $file->getClientOriginalName();
+        $fileName = $this->createFilename($file);
+        $fileSize = $file->getSize();
+        $finalPath = $this->getTempFullPath();
+        $mimetype = $file->getMimeType();
+        $storePath = $this->getTempFilePath($fileName);
+        $extension = ".{$file->getClientOriginalExtension()}";
+
+
+        $file->move($finalPath, $fileName);
+
+
+
+        $user = $request->user();
+        $user_id = $user->id;
+        $role = $user->role_id;
+
+        $task = PendingTask::where('user_id', $user_id)
+            ->where('user_type', $role)
+            ->where('task_type', $task_type)
+            ->first();
+
+        if ($task) {
+
+            PendingTaskDocument::where('pending_task_id', $task->id)->delete();
+            PendingTaskContent::where('pending_task_id', $task->id)->delete();
+
+            $task->delete();
+        }
+
+
+        $task =  PendingTask::create([
+            'user_id' => $user_id,
+            'user_type' => $role,
+            'task_type' => $task_type,
+
+
+        ]);
+
+
+        $data = [
+            "pending_id" => $task->id,
+            "name" => $fileActualName,
+            "size" => $fileSize,
+            "check_list_id" => CheckListEnum::representer_document,
+            "extension" => $mimetype,
+            "path" => $storePath,
+        ];
+
+
+        $this->pendingDocument($data);
+
+        return response()->json($data, 200);
+    }
     public function checkListCheck($request, $filePath)
     {
         // 1. Validate check exist
@@ -211,6 +297,8 @@ class FileController extends Controller
         $user_id = $user->id;
         $role = $user->role_id;
 
+
+
         $task = PendingTask::where('user_id', $user_id)
             ->where('user_type', $role)
             ->where('task_type', $task_type)
@@ -224,6 +312,8 @@ class FileController extends Controller
                 'task_id' => $id
             ]);
         }
+
+
         return $task->id;
     }
 

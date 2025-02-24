@@ -361,6 +361,7 @@ class StoresNgoController extends Controller
         $role = $user->role_id;
         $task_type = TaskTypeEnum::ngo_registeration;
 
+
         $task = PendingTask::where('user_id', $user_id)
             ->where('user_type', $role)
             ->where('task_type', $task_type)
@@ -382,7 +383,7 @@ class StoresNgoController extends Controller
 
             $oldPath = storage_path("app/" . $checklist['path']); // Absolute path of temp file
 
-            $newDirectory = storage_path() . "/app/private/ngos/{$ngo_name}/{$agreement_id}/";
+            $newDirectory = storage_path() . "/app/private/ngos/{$ngo_name}/{$agreement_id}/{$checklist['check_list_id']}/";
 
             if (!file_exists($newDirectory)) {
                 mkdir($newDirectory, 0775, true);
@@ -390,7 +391,7 @@ class StoresNgoController extends Controller
 
             $newPath = $newDirectory . basename($checklist['path']); // Keep original filename
 
-            $dbStorePath = "private/ngos/{$ngo_name}/{$agreement_id}/"
+            $dbStorePath = "private/ngos/{$ngo_name}/{$agreement_id}/{$checklist['check_list_id']}/"
                 . basename($checklist['path']);
             // Ensure the new directory exists
 

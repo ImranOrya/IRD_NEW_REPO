@@ -14,6 +14,9 @@ Route::prefix('v1')->middleware(['api.key', "authorized:" . 'user:api'])->group(
 
 Route::prefix('v1')->middleware(['api.key', "authorized:" . 'user:api'])->group(function () {
   Route::post('ngo/file/upload/{ngo_id}', [FileController::class, 'uploadNgoFile'])->withoutMiddleware('throttle');
+
+  Route::post('ngo/reperesenter/file/upload', [FileController::class, 'uploadNgoFileBeforeStore'])->withoutMiddleware('throttle');
+
   Route::post('ngo/extend/file/upload/{ngo_id}', [FileController::class, 'uploadNgoExtendFile'])->withoutMiddleware('throttle');
 });
 
