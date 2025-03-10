@@ -382,7 +382,8 @@ class StoresNgoController extends Controller
         } else {
             $start_date = Carbon::parse($request->start_date);
             $end_date = Carbon::parse($request->end_date);
-            $gapInDays = $start_date->diffInDays($end_date);
+            $gapInDays = ceil($start_date->diffInDays($end_date));
+
             if ($gapInDays < $expirationDate->days) {
                 return response()->json(
                     [

@@ -75,7 +75,6 @@ class DatabaseSeeder extends Seeder
         $this->call(CheckListSeeder::class);
         $this->call(UserPermissionSeeder::class);
         $this->call(NotifierSeeder::class);
-        $this->call(AboutSeeder::class);
 
         $this->ngoTypes();
         $this->statusType();
@@ -84,6 +83,7 @@ class DatabaseSeeder extends Seeder
         $this->priorityTypes();
         $this->nidTypes();
         $this->staffTypes();
+        $this->call(AboutSeeder::class);
     }
     public function ngoTypes()
     {
