@@ -2723,12 +2723,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sayednaweed/sway.git",
-                "reference": "8a967969525b926fba3149cf9aad6a1557b55755"
+                "reference": "8875760a24132a19a6546b9d984bb5cb328eae7f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sayednaweed/sway/zipball/8a967969525b926fba3149cf9aad6a1557b55755",
-                "reference": "8a967969525b926fba3149cf9aad6a1557b55755",
+                "url": "https://api.github.com/repos/sayednaweed/sway/zipball/8875760a24132a19a6546b9d984bb5cb328eae7f",
+                "reference": "8875760a24132a19a6546b9d984bb5cb328eae7f",
                 "shasum": ""
             },
             "require": {
@@ -2773,7 +2773,7 @@
                 "issues": "https://github.com/sayednaweed/sway/issues",
                 "source": "https://github.com/sayednaweed/sway/tree/v1.0.0"
             },
-            "time": "2025-03-07T23:48:07+00:00"
+            "time": "2025-03-09T08:31:07+00:00"
         },
         {
             "name": "nunomaduro/termwind",
