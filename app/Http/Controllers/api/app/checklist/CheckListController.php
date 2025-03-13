@@ -225,6 +225,28 @@ class CheckListController extends Controller
         );
     }
 
+    public function validationChecklist($id)
+    {
+        $checklist = DB::table('check_lists as cl')
+            ->where('cl.id', $id)
+            ->where('cl.active', true)
+            ->select(
+                'cl.id',
+                'cl.acceptable_mimes',
+                'cl.acceptable_extensions',
+                'cl.description',
+                'cl.file_size',
+            )
+            ->first();
+
+
+        return response()->json(
+            $checklist,
+            200,
+            [],
+            JSON_UNESCAPED_UNICODE
+        );
+    }
     public function checklist($id)
     {
         $locale = App::getLocale();
@@ -266,7 +288,6 @@ class CheckListController extends Controller
         if ($checklist) {
             // Exploding the comma-separated strings into arrays
             $acceptableMimes = explode(',', $checklist->acceptable_mimes);
-            $acceptableExtensions = explode(',', $checklist->acceptable_extensions);
             $acceptableExtensions = explode(',', $checklist->acceptable_extensions);
 
             // Combine them into an array of objects
@@ -370,6 +391,7 @@ class CheckListController extends Controller
             ->select(
                 'clt.value as name',
                 'cl.id',
+                'cl.file_size',
                 'cl.acceptable_mimes',
                 'cl.acceptable_extensions',
                 'cl.description'
@@ -389,6 +411,7 @@ class CheckListController extends Controller
             ->select(
                 'clt.value as name',
                 'cl.id',
+                'cl.file_size',
                 'cl.acceptable_mimes',
                 'cl.acceptable_extensions',
                 'cl.description'

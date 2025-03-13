@@ -571,7 +571,7 @@ class StoresNgoController extends Controller
         // Get checklist IDs
         $documents = PendingTaskDocument::join('check_lists', 'check_lists.id', 'pending_task_documents.check_list_id')
             ->where('pending_task_id', $pending_task_id)
-            ->select('size', 'path', 'acceptable_mimes', 'check_list_id', 'actual_name', 'extension')
+            ->select('size', 'path', 'check_list_id', 'actual_name', 'extension')
             ->get();
 
         foreach ($documents as $checklist) {
