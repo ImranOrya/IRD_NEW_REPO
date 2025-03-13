@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('approvals', function (Blueprint $table) {
             $table->id();
+            $table->boolean("completed")->default(false);
             $table->string("request_comment")->nullable();
             $table->timestamp('request_date')->useCurrent();
             $table->string("respond_comment")->nullable();

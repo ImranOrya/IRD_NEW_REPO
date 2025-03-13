@@ -5,6 +5,14 @@ namespace App\Repositories\Approval;
 interface ApprovalRepositoryInterface
 {
     /**
+     * Returns ngo approval record.
+     * 
+     *
+     * @param string approval_id
+     * @return @var \Illuminate\Support\Collection<int, \stdClass|null> $approvals
+     */
+    public function ngoApproval($approval_id);
+    /**
      * Return list Approvals by notifier_type and requester_type.
      * 
      *
@@ -33,5 +41,5 @@ interface ApprovalRepositoryInterface
      * @param string documentable_type
      * @return App\Models\ApprovalDocument
      */
-    public function storeApprovalDocument($approval_id, $documentable_id, $documentable_type);
+    public function storeApprovalDocument($approval_id, $documentData);
 }

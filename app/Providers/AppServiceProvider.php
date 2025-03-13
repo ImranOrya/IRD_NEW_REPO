@@ -13,6 +13,8 @@ use App\Repositories\Permission\PermissionRepository;
 use App\Repositories\Notification\NotificationRepository;
 use App\Repositories\Task\PendingTaskRepositoryInterface;
 use App\Repositories\Approval\ApprovalRepositoryInterface;
+use App\Repositories\Director\DirectorRepository;
+use App\Repositories\Director\DirectorRepositoryInterface;
 use App\Repositories\Permission\PermissionRepositoryInterface;
 use App\Repositories\Notification\NotificationRepositoryInterface;
 
@@ -29,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(PendingTaskRepositoryInterface::class, PendingTaskRepository::class);
         $this->app->bind(NotificationRepositoryInterface::class, NotificationRepository::class);
         $this->app->bind(ApprovalRepositoryInterface::class, ApprovalRepository::class);
+        $this->app->bind(DirectorRepositoryInterface::class, DirectorRepository::class);
     }
 
     /**

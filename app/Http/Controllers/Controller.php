@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
+use App\Models\User;
 use App\Models\Contact;
 use App\Models\Translate;
-use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Exception;
+use App\Models\NgoTypeTrans;
+use Illuminate\Http\Request;
+use App\Models\StatusTypeTran;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 
 abstract class Controller
 {
@@ -144,5 +147,41 @@ abstract class Controller
             'translable_type' => $translable_type,
             'translable_id' => $translable_id,
         ]);
+    }
+
+
+
+    /**
+     * Retrieve status translations.
+     * 
+     * @return \Illuminate\Support\Collection
+     */
+    protected function getStatusTrans()
+    {
+        $locale = App::getLocale();
+        $cacheKey = 'status_type_tran_' . $locale;
+
+        return Cache::remember($cacheKey, 86400, function () use ($locale) {
+            return StatusTypeTran::select('name', 'status_type_id')
+                ->where('language_name', $locale)
+                ->get();
+        });
+    }
+
+    /**
+     * Retrieve NGO type translations.
+     * 
+     * @return \Illuminate\Support\Collection
+     */
+    protected function getNgoTypeTrans()
+    {
+        $locale = App::getLocale();
+        $cacheKey = 'ngo_type_tran_' . $locale;
+
+        return Cache::remember($cacheKey, 86400, function () use ($locale) {
+            return NgoTypeTrans::select('value as name', 'ngo_type_id')
+                ->where('language_name', $locale)
+                ->get();
+        });
     }
 }

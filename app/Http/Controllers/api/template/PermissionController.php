@@ -4,16 +4,8 @@ namespace App\Http\Controllers\api\template;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use App\Models\SubPermission;
-use App\Models\RolePermission;
-use App\Models\UserPermission;
-use App\Models\RolePermissionSub;
-use App\Models\UserPermissionSub;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Repositories\Permission\PermissionRepositoryInterface;
-
-use function Laravel\Prompts\error;
 
 class PermissionController extends Controller
 {

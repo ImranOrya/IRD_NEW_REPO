@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\api\app\agreement;
 
-use App\Models\Document;
 use App\Models\Agreement;
 use App\Models\CheckList;
 use Illuminate\Http\Request;
@@ -32,7 +31,7 @@ class AgreementController extends Controller
             'agreement_documents' => $documents,
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
-    public function agreement($id)
+    public function agreement(Request $request, $id)
     {
         $data = Agreement::select('id', 'start_date', 'end_date')->where('ngo_id', $id)->get();
         return response()->json([
@@ -41,7 +40,7 @@ class AgreementController extends Controller
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 
-    public function agreementDocument($id)
+    public function agreementDocument(Request $request, $id)
     {
 
         $locale = App::getLocale();

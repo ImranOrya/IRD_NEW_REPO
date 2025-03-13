@@ -9,4 +9,6 @@ enum StatusTypeEnum: int
     case signed_register_form_submitted = 3;
     case registered = 4;
     case blocked = 5;
+    case registration_expired = 6;
+    case registration_extended = 7;
 }

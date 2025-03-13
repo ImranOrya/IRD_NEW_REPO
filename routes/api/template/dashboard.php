@@ -1,8 +1,8 @@
 
 <?php
 
-use App\Http\Controllers\api\template\DashboardController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\api\app\dashboard\user\DashboardController;
 
 Route::prefix('v1')->group(function () {
     Route::get('/dashboard/data', [DashboardController::class, 'headerData']);

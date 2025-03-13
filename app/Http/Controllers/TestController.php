@@ -17,6 +17,7 @@ use App\Models\Address;
 use App\Models\Country;
 use App\Models\NgoTran;
 use App\Enums\StaffEnum;
+use App\Models\Approval;
 use App\Models\Director;
 use App\Models\District;
 use App\Models\Document;
@@ -24,6 +25,7 @@ use App\Models\Province;
 use App\Models\Agreement;
 use App\Models\CheckList;
 use App\Models\Translate;
+use App\Models\StatusType;
 use App\Enums\LanguageEnum;
 use App\Models\AddressTran;
 use App\Models\PendingTask;
@@ -44,16 +46,15 @@ use App\Models\PendingTaskContent;
 use Illuminate\Support\Facades\DB;
 use App\Models\PendingTaskDocument;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Log;
-use App\Traits\Address\AddressTrait;
 
+use Illuminate\Support\Facades\Log;
+use App\Enums\Type\ApprovalTypeEnum;
+use App\Traits\Address\AddressTrait;
 use function Laravel\Prompts\select;
 use Illuminate\Support\Facades\Http;
 use App\Enums\CheckList\CheckListEnum;
-use App\Enums\Type\ApprovalTypeEnum;
 use App\Enums\Type\RepresenterTypeEnum;
 use App\Enums\Type\RepresentorTypeEnum;
-use App\Models\Approval;
 use App\Repositories\ngo\NgoRepositoryInterface;
 use App\Repositories\User\UserRepositoryInterface;
 
@@ -101,6 +102,13 @@ class TestController extends Controller
     {
         $locale = App::getLocale();
 
+        $now = Carbon::now('UTC');
+        return $now;
+
+        // Fetch expired agreements in bulk using DB::table()
+        return DB::table('agreements')
+            ->where('end_date', '<', $now->toIso8601String())
+            ->pluck('ngo_id'); // Fetch only ngo_id
         $approval_id = 1;
         $approval =  DB::table('approvals as a')
             ->where('a.id', $approval_id)->first();
@@ -112,33 +120,66 @@ class TestController extends Controller
         if ($approval->requester_type == Ngo::class) {
         }
         $approval = DB::table('approvals as a')
-            ->where("a.requester_type", Ngo::class)
-            ->where("a.approval_type_id", $approval->approval_type_id)
-            ->join('approval_type_trans as att', function ($join) use ($locale) {
-                $join->on('att.approval_type_id', '=', 'a.approval_type_id')
-                    ->where('att.language_name', $locale);
+            ->where("a.id", $approval->id)
+            ->leftJoin('users as u', function ($join) {
+                $join->on('u.id', '=', 'a.responder_id');
             })
             ->join('ngo_trans as nt', function ($join) use ($locale) {
                 $join->on('nt.ngo_id', '=', 'a.requester_id')
                     ->where('nt.language_name', $locale);
             })
+            ->join('agreements as ag', function ($join) use ($locale) {
+                $join->on('ag.ngo_id', '=', 'a.requester_id')
+                    ->latest('ag.end_date');
+            })
             ->join('notifier_type_trans as ntt', function ($join) use ($locale) {
                 $join->on('ntt.notifier_type_id', '=', 'a.notifier_type_id')
                     ->where('ntt.language_name', $locale);
             })
+            ->join('approval_documents as ad', 'ad.approval_id', '=', 'a.id')
             ->select(
+                'a.id',
                 'a.requester_id',
                 'nt.name as requester_name',
-                'a.id',
                 'a.request_date',
+                'ag.start_date',
+                'ag.end_date',
+                "a.request_comment",
                 'a.responder_id',
-                'a.responder_type',
+                'u.username as responder',
+                'a.respond_date',
+                "a.respond_comment",
                 'a.notifier_type_id',
                 'ntt.value as notifier_type',
+                'ad.id as document_id',
+                'ad.path',
+                'ad.actual_name as name',
+                'ad.type as extension',
+                'ad.size',
             )
-            ->first();
+            ->get();
 
-        return $approval;
+        $approvalsWithDocuments = $approval->groupBy('id')->map(function ($approvalGroup) {
+            $approval = $approvalGroup->first();
+            $documents = $approvalGroup->map(function ($item) {
+                return [
+                    'id' => $item->document_id,
+                    'path' => $item->path,
+                    'name' => $item->name,
+                    'extension' => $item->extension,
+                    'size' => $item->size,
+                ];
+            });
+
+            $approval->approval_documents = $documents;
+            unset($approval->document_id, $approval->path, $approval->name, $approval->extension, $approval->size);  // Clean up extra fields
+
+            return $approval;
+        })->values();
+
+
+        if (count($approvalsWithDocuments) != 0)
+            return $approvalsWithDocuments->first();
 
         $includes = [
             CheckListEnum::ngo_register_form_en->value,

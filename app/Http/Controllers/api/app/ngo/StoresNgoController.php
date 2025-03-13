@@ -10,19 +10,20 @@ use App\Enums\RoleEnum;
 use App\Models\Address;
 use App\Models\Contact;
 use App\Models\NgoTran;
+use App\Models\Setting;
 use App\Models\Director;
 use App\Models\Document;
 use App\Models\Agreement;
 use App\Models\CheckList;
 use App\Models\NgoStatus;
 use App\Enums\CountryEnum;
+use App\Enums\SettingEnum;
 use App\Enums\LanguageEnum;
 use App\Enums\NotifierEnum;
 use App\Models\AddressTran;
 use App\Models\PendingTask;
 use App\Models\Representer;
 use App\Models\DirectorTran;
-use Illuminate\Http\Request;
 use App\Enums\PermissionEnum;
 use App\Models\NgoPermission;
 use App\Models\CheckListTrans;
@@ -41,17 +42,14 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use App\Traits\File\PendingFileTrait;
 use App\Enums\CheckList\CheckListEnum;
-use App\Enums\SettingEnum;
-use App\Enums\Type\RepresentorTypeEnum;
+use Database\Factories\ApprovalFactory;
 use App\Http\Requests\app\ngo\NgoRegisterRequest;
 use App\Http\Requests\app\ngo\NgoInitStoreRequest;
 use App\Repositories\Task\PendingTaskRepositoryInterface;
-use App\Http\Requests\app\ngo\StoreSignedRegisterFormRequest;
-use App\Models\ApprovalDocument;
-use App\Models\Setting;
 use App\Repositories\Approval\ApprovalRepositoryInterface;
+use App\Repositories\Director\DirectorRepositoryInterface;
+use App\Http\Requests\app\ngo\StoreSignedRegisterFormRequest;
 use App\Repositories\Notification\NotificationRepositoryInterface;
-use Database\Factories\ApprovalFactory;
 
 class StoresNgoController extends Controller
 {
@@ -59,15 +57,18 @@ class StoresNgoController extends Controller
     protected $pendingTaskRepository;
     protected $notificationRepository;
     protected $approvalRepository;
+    protected $directorRepository;
 
     public function __construct(
         PendingTaskRepositoryInterface $pendingTaskRepository,
         NotificationRepositoryInterface $notificationRepository,
-        ApprovalRepositoryInterface $approvalRepository
+        ApprovalRepositoryInterface $approvalRepository,
+        DirectorRepositoryInterface $directorRepository
     ) {
         $this->pendingTaskRepository = $pendingTaskRepository;
         $this->notificationRepository = $notificationRepository;
         $this->approvalRepository = $approvalRepository;
+        $this->directorRepository = $directorRepository;
     }
     public function store(NgoRegisterRequest $request)
     {
@@ -335,13 +336,42 @@ class StoresNgoController extends Controller
             'comment' => 'Register Form Complete',
         ]);
 
+        $directorDocumentsId = [];
+        $document =  $this->documentStore($agreement->id, $id, $task->id, function ($documentData) use ($directorDocumentsId) {
+            $checklist_id = $documentData['check_list_id'];
+            $document = Document::create([
+                'actual_name' => $documentData['actual_name'],
+                'size' => $documentData['size'],
+                'path' => $documentData['path'],
+                'type' => $documentData['type'],
+                'check_list_id' => $checklist_id,
+            ]);
+            if (
+                $checklist_id == CheckListEnum::director_work_permit->value
+                || $checklist_id == CheckListEnum::director_nid->value
+            ) {
+                array_push($directorDocumentsId, $document->id);
+            }
 
-        $document =  $this->documentStore($agreement->id, $id, $task->id);
+            AgreementDocument::create([
+                'document_id' => $document->id,
+                'agreement_id' => $documentData['agreement_id'],
+            ]);
+        });
         if ($document) {
             return $document;
         }
-        $this->directorStore($validatedData, $id, $agreement->id);
-
+        $director = $this->directorRepository->storeNgoDirector(
+            $validatedData,
+            $id,
+            $agreement->id,
+            $directorDocumentsId,
+            true
+        );
+        AgreementDirector::create([
+            'agreement_id' => $agreement->id,
+            'director_id' => $director->id
+        ]);
         $this->pendingTaskRepository->destroyPendingTask(
             $request->user(),
             TaskTypeEnum::ngo_registeration,
@@ -461,13 +491,12 @@ class StoresNgoController extends Controller
             $ngo_id,
             Ngo::class,
             NotifierEnum::ngo_submitted_register_form->value,
-            ""
+            $request->request_comment
         );
-        $document = $this->documentStore($agreement->id, $ngo_id, $task->id, function ($document) use ($approval) {
+        $document = $this->documentStore($agreement->id, $ngo_id, $task->id, function ($documentData) use ($approval) {
             $this->approvalRepository->storeApprovalDocument(
                 $approval->id,
-                $document->id,
-                Document::class
+                $documentData
             );
         });
         if ($document) {
@@ -495,7 +524,7 @@ class StoresNgoController extends Controller
             'ngo_id' => $ngo_id,
             'user_id' => $request->user()->id,
             "is_active" => true,
-            'status_type_id' => StatusTypeEnum::signed_register_form_submitted,
+            'status_type_id' => StatusTypeEnum::signed_register_form_submitted->value,
             'comment' => 'Signed Register Form Submitted',
         ]);
         DB::commit();
@@ -537,7 +566,7 @@ class StoresNgoController extends Controller
 
         return null;
     }
-    protected function documentStore($agreement_id, $ngo_id, $pending_task_id, ?callable $callback = null)
+    protected function documentStore($agreement_id, $ngo_id, $pending_task_id, ?callable $callback)
     {
         // Get checklist IDs
         $documents = PendingTaskDocument::join('check_lists', 'check_lists.id', 'pending_task_documents.check_list_id')
@@ -566,65 +595,18 @@ class StoresNgoController extends Controller
                 ], 404);
             }
 
-            $document = Document::create([
+            $documentData = [
                 'actual_name' => $checklist['actual_name'],
                 'size' => $checklist['size'],
                 'path' => $dbStorePath,
                 'type' => $checklist['extension'],
                 'check_list_id' => $checklist['check_list_id'],
-            ]);
-
-            // **Fix whitespace issue in keys**
-            AgreementDocument::create([
-                'document_id' => $document->id,
-                'agreement_id' => $agreement_id,
-            ]);
+                'agreement_id' => $agreement_id
+            ];
             if ($callback) {
-                $callback($document);
+                $callback($documentData);
             }
         }
-    }
-    protected function directorStore($validatedData, $ngo_id, $agreement_id)
-    {
-        $email = Email::create(['value' => $validatedData['director_email']]);
-        $contact = Contact::create(['value' => $validatedData['director_contact']]);
-
-        // **Fix address creation**
-        $address = Address::create([
-            'province_id' => $validatedData['director_province']['id'],
-            'district_id' => $validatedData['director_dis']['id'],
-        ]);
-
-        AddressTran::insert([
-            ['language_name' => 'en', 'address_id' => $address->id, 'area' => $validatedData['director_area_english']],
-            ['language_name' => 'ps', 'address_id' => $address->id, 'area' => $validatedData['director_area_pashto']],
-            ['language_name' => 'fa', 'address_id' => $address->id, 'area' => $validatedData['director_area_farsi']],
-        ]);
-
-        $director = Director::create([
-            'ngo_id' => $ngo_id,
-            'nid_no' => $validatedData['nid'] ?? '',
-            'nid_type_id' => $validatedData['identity_type']['id'],
-            'is_Active' => 1,
-            'gender_id' => $validatedData['gender']['id'],
-            'country_id' => $validatedData['nationality']['id'],
-            'address_id' => $address->id,
-            'email_id' => $email->id,
-            'contact_id' => $contact->id,
-        ]);
-
-
-
-        DirectorTran::insert([
-            ['director_id' => $director->id, 'language_name' => 'en', 'name' => $validatedData['director_name_english'], 'last_name' => $validatedData['surname_english']],
-            ['director_id' => $director->id, 'language_name' => 'ps', 'name' => $validatedData['director_name_pashto'], 'last_name' => $validatedData['surname_pashto']],
-            ['director_id' => $director->id, 'language_name' => 'fa', 'name' => $validatedData['director_name_farsi'], 'last_name' => $validatedData['surname_farsi']],
-        ]);
-
-        AgreementDirector::create([
-            'agreement_id' => $agreement_id,
-            'director_id' => $director->id
-        ]);
     }
     public function ngoPermissions($ngo_id)
     {

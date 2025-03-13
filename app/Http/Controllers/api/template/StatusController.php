@@ -15,7 +15,7 @@ class StatusController extends Controller
     public function blockStatusesType()
     {
         $locale = App::getLocale();
-        $includes = [StatusTypeEnum::active->value, StatusTypeEnum::blocked->value];
+        $includes = [StatusTypeEnum::blocked->value];
         $statusesType = DB::table('status_types as st')
             ->whereIn('st.id', $includes)
             ->leftjoin('status_type_trans as stt', function ($join) use ($locale) {

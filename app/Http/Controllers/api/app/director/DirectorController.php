@@ -46,17 +46,16 @@ class DirectorController extends Controller
             'district_id' => $request->district['id'],
         ]);
 
-        // 4. If is_active is true make other directors false
-        if ($request->is_active == true)
-            Director::where('is_active', true)
-                ->where('ngo_id', $ngo->id)
-                ->update(['is_active' => false]);
+        // 4. make other directors false
+        Director::where('is_active', true)
+            ->where('ngo_id', $ngo->id)
+            ->update(['is_active' => false]);
         // 5. Create the Director
         $director = Director::create([
             'ngo_id' => $id,
             'nid_no' => $request->nid,
             'nid_type_id' => $request->identity_type['id'],
-            'is_active' => $request->is_active,
+            'is_active' => 1,
             'gender_id' => $request->gender['id'],
             'country_id' => $request->nationality['id'],
             'address_id' => $address->id,

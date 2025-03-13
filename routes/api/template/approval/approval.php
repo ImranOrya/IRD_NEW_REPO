@@ -17,4 +17,7 @@ Route::prefix('v1')->middleware(['api.key', "authorized:" . 'user:api'])->group(
   Route::get('pending/donor/approvals', [ApprovalController::class, 'pendingDonorApproval'])->middleware(["userHasSubViewPermission:" . PermissionEnum::approval->value . "," . SubPermissionEnum::pending_approval->value]);
   Route::get('approved/donor/approvals', [ApprovalController::class, 'approvedDonorApproval'])->middleware(["userHasSubViewPermission:" . PermissionEnum::approval->value . "," . SubPermissionEnum::approved_approval->value]);
   Route::get('rejected/donor/approvals', [ApprovalController::class, 'rejectedDonorApproval'])->middleware(["userHasSubViewPermission:" . PermissionEnum::approval->value . "," . SubPermissionEnum::rejected_approval->value]);
+  // 
+  Route::get('approval/{id}', [ApprovalController::class, 'approval'])->middleware(["userHasSubViewPermission:" . PermissionEnum::approval->value . "," . SubPermissionEnum::pending_approval->value]);
+  Route::post('approval/submit', [ApprovalController::class, 'approvalSubmit'])->middleware(["userHasSubEditPermission:" . PermissionEnum::approval->value . "," . SubPermissionEnum::pending_approval->value]);
 });

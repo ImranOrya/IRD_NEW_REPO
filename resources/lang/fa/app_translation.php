@@ -47,5 +47,7 @@ return [
     "date_is_smaller" => "تاریخ کمتر از",
     "date_is_bigger" => "تاریخ بیشتر از",
     "year" => "سال است",
-    "approval_not_found" => "تأیید یافت نشد"
+    "approval_not_found" => "تأیید یافت نشد",
+    "allowed_file_types" => "انواع فایل های مجاز: ",
+    "file_size_error" => "اندازه فایل باید بین این اندازه باشد: ",
 ];

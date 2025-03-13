@@ -71,7 +71,7 @@ class CheckListSeeder extends Seeder
     protected function ngoRegisterationCheckList()
     {
         $checklist = CheckList::create([
-            'id' => CheckListEnum::NgoDirectorNid,
+            'id' => CheckListEnum::director_nid,
             'check_list_type_id' => CheckListTypeEnum::ngoRegister,
             'acceptable_extensions' => "pdf,jpeg,jpg,png",
             'acceptable_mimes' => ".pdf,.jpeg,.jpg,.png",

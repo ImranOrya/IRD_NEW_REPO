@@ -252,19 +252,7 @@ class ViewsNgoController extends Controller
             "username" => $ngo->username,
             "contact" => $ngo->contact,
             "email" => $ngo->email,
-            "registration_expired" => false,
         ];
-        // 2. Check NGO agreement expiration
-        $agreement = Agreement::where('ngo_id', $ngo_id)
-            ->where('end_date', '!=', null)
-            ->latest('end_date')
-            ->select('end_date')
-            ->first();
-        if ($agreement) {
-            // Check Registration is expired
-            $result['registration_expired'] = Carbon::parse($agreement->end_date)->isPast();
-        }
-
         return response()->json([
             'ngo' => $result,
         ], 200, [], JSON_UNESCAPED_UNICODE);

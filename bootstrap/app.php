@@ -72,8 +72,7 @@ return Application::configure(basePath: dirname(__DIR__))
             ];
             // Dispatch the logging job asynchronously
             LogErrorJob::dispatch($logData);
-            Log::info($err);
-            Log::info('Global Exception =>' . $err->getMessage());
+            Log::info('Global Exception =>' . $err);
             return response()->json([
                 'message' => __('app_translation.server_error')
             ], 500, [], JSON_UNESCAPED_UNICODE);

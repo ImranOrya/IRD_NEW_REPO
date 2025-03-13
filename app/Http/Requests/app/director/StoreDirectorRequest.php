@@ -66,7 +66,6 @@ class StoreDirectorRequest extends FormRequest
             'surname_english' => 'required|string|max:255',
             'surname_pashto' => 'required|string|max:255',
             'surname_farsi' => 'required|string|max:255',
-            'is_active' => 'required',
         ];
     }
 }

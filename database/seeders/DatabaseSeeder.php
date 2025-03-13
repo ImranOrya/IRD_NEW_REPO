@@ -387,6 +387,50 @@ class DatabaseSeeder extends Seeder
             'name' => 'بند'
 
         ]);
+
+        $statustype = StatusType::factory()->create([
+            'id' => StatusTypeEnum::registration_expired,
+        ]);
+        DB::table('status_type_trans')->insert([
+            'status_type_id' => $statustype->id,
+            'language_name' => 'en',
+            'name' => 'Registration expired'
+
+        ]);
+        DB::table('status_type_trans')->insert([
+            'status_type_id' => $statustype->id,
+            'language_name' => 'fa',
+            'name' => 'ثبت نام به پایان رسیده'
+
+        ]);
+        DB::table('status_type_trans')->insert([
+            'status_type_id' => $statustype->id,
+            'language_name' => 'ps',
+            'name' => 'نوم لیکنه پای ته ورسېده.'
+
+        ]);
+
+        $statustype = StatusType::factory()->create([
+            'id' => StatusTypeEnum::registration_extended,
+        ]);
+        DB::table('status_type_trans')->insert([
+            'status_type_id' => $statustype->id,
+            'language_name' => 'en',
+            'name' => 'Registration extended'
+
+        ]);
+        DB::table('status_type_trans')->insert([
+            'status_type_id' => $statustype->id,
+            'language_name' => 'fa',
+            'name' => 'ثبت نام تمدید شد'
+
+        ]);
+        DB::table('status_type_trans')->insert([
+            'status_type_id' => $statustype->id,
+            'language_name' => 'ps',
+            'name' => 'د نوم لیکنې موده غځول شوې ده'
+
+        ]);
     }
     public function staffTypes()
     {

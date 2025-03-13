@@ -49,5 +49,7 @@ return [
     "date_is_smaller" => "The date subceed than",
     "date_is_bigger" => "The date exceed than",
     "year" => "year",
-    "approval_not_found" => "Approval not found"
+    "approval_not_found" => "Approval not found",
+    "allowed_file_types" => "Allowed file types: ",
+    "file_size_error" => "File size must be between this size: ",
 ];
