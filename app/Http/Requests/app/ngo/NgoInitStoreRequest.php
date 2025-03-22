@@ -48,7 +48,6 @@ class NgoInitStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-
             "name_english" => 'required|string|max:128|min:5',
             "name_farsi" =>  'required|string|max:128|min:5',
             "name_pashto" => 'required|string|max:128|min:5',

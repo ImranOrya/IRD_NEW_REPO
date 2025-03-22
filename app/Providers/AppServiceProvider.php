@@ -17,6 +17,10 @@ use App\Repositories\Director\DirectorRepository;
 use App\Repositories\Director\DirectorRepositoryInterface;
 use App\Repositories\Permission\PermissionRepositoryInterface;
 use App\Repositories\Notification\NotificationRepositoryInterface;
+use App\Repositories\Representative\RepresentativeRepository;
+use App\Repositories\Representative\RepresentativeRepositoryInterface;
+use App\Repositories\Storage\StorageRepository;
+use App\Repositories\Storage\StorageRepositoryInterface;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -32,6 +36,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(NotificationRepositoryInterface::class, NotificationRepository::class);
         $this->app->bind(ApprovalRepositoryInterface::class, ApprovalRepository::class);
         $this->app->bind(DirectorRepositoryInterface::class, DirectorRepository::class);
+        $this->app->bind(RepresentativeRepositoryInterface::class, RepresentativeRepository::class);
+        $this->app->bind(StorageRepositoryInterface::class, StorageRepository::class);
     }
 
     /**

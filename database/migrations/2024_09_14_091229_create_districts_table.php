@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('districts', function (Blueprint $table) {
             $table->id();
-            $table->string("name");
             $table->foreignId('province_id')
                 ->constrained()
                 ->onUpdate('cascade')

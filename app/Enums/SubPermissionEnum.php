@@ -44,6 +44,7 @@ enum SubPermissionEnum: int
     case ngo_more_information = 55;
     case ngo_status = 56;
     case ngo_representative = 57;
+    case ngo_update_account_password = 58;
     public const NGO = [
         52 => "account_information",
         53 => "director_information",
@@ -51,6 +52,7 @@ enum SubPermissionEnum: int
         55 => "more_information",
         56 => "status",
         57 => "representative",
+        58 => "update_account_password",
     ];
         // ABOUT
     case about_director = 71;

@@ -209,4 +209,27 @@ class PendingTaskRepository implements PendingTaskRepositoryInterface
         ];
         return response()->json($data, 200);
     }
+    public function pendingTask(Request $request, $task_type, $task_type_id): array
+    {
+        // Retrieve the first matching pending task
+        $task = $this->pendingTaskExist(
+            $request->user(),
+            $task_type,
+            $task_type_id,
+        );
+
+        if ($task) {
+            // Fetch and concatenate content
+            $pendingTask = PendingTaskContent::where('pending_task_id', $task->id)
+                ->select('content', 'id')
+                ->orderBy('id', 'desc')
+                ->first();
+            return [
+                'content' => $pendingTask ? $pendingTask->content : null
+            ];
+        }
+        return [
+            'content' => null
+        ];
+    }
 }

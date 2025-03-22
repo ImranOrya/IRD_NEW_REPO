@@ -43,10 +43,11 @@ use App\Models\RolePermissionSub;
 use App\Enums\DestinationTypeEnum;
 use App\Enums\Type\StatusTypeEnum;
 use App\Models\PendingTaskContent;
+use App\Traits\Helper\HelperTrait;
 use Illuminate\Support\Facades\DB;
 use App\Models\PendingTaskDocument;
-use Illuminate\Support\Facades\App;
 
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 use App\Enums\Type\ApprovalTypeEnum;
 use App\Traits\Address\AddressTrait;
@@ -62,6 +63,7 @@ class TestController extends Controller
 {
     protected $ngoRepository;
     protected $userRepository;
+    use HelperTrait;
 
     public function __construct(
         NgoRepositoryInterface $ngoRepository,
@@ -100,10 +102,199 @@ class TestController extends Controller
     }
     public function index()
     {
-        $locale = App::getLocale();
-
+        $expiresAtTimestamp = Carbon::parse("2025-03-20 21:46:58")->timestamp;
+        if (Carbon::now()->timestamp > $expiresAtTimestamp) {
+            return 'Token has expired';
+        }
+        return;
         $now = Carbon::now('UTC');
-        return $now;
+        $status_type_id = [
+            StatusTypeEnum::registered->value,
+            StatusTypeEnum::blocked->value
+        ];
+        $expiredAgreements = DB::table('agreements as a')
+            ->select('a.ngo_id', DB::raw('MAX(a.end_date) as max_end_date'), DB::raw('MAX(a.id) as max_id'))
+            ->where('a.end_date', '<', $now->toIso8601String())
+            ->groupBy('a.ngo_id')
+            ->join('ngo_statuses as ns', function ($join) use (&$status_type_id) {
+                $join->on('ns.ngo_id', '=', 'a.ngo_id')
+                    ->where('ns.is_active', true)
+                    ->whereIn('ns.status_type_id', $status_type_id);
+            })
+            ->pluck('a.ngo_id');
+        return $expiredAgreements;
+
+        $locale = App::getLocale(); // Current locale/language
+        $ngo_id = 4;
+        $userModel = $this->getModelName(User::class);
+        $ngoModel = $this->getModelName(Ngo::class);
+
+        return  $representor = DB::table('representers as r')
+            ->where('r.ngo_id', $ngo_id)
+            ->join('representer_trans as rt', function ($join) use ($locale) {
+                $join->on('r.id', '=', 'rt.representer_id')
+                    ->where('rt.language_name', $locale);
+            })
+            ->join('agreement_representers as ar', 'ar.representer_id', '=', 'r.id')
+            ->join('agreements as a', function ($join) {
+                $join->on('a.id', '=', 'ar.agreement_id');
+            })
+            ->leftJoin('users as u', function ($join) use ($userModel) {
+                $join->on('r.userable_id', '=', 'u.id')
+                    ->where('r.userable_type', $userModel);
+            })
+            ->leftJoin('ngos as n', function ($join) use ($ngoModel) {
+                $join->on('r.userable_id', '=', 'n.id')
+                    ->where('r.userable_type', $ngoModel);
+            })
+            ->select(
+                'r.id',
+                'r.is_active',
+                'r.userable_id',
+                'r.userable_type',
+                'r.created_at',
+                'rt.full_name',
+                'u.username',
+                'a.id as agreement_id',
+                'a.agreement_no',
+                'a.start_date',
+                'a.end_date',
+                "u.username as saved_by"
+            )
+            ->orderBy('r.id', 'desc')
+            ->get();
+
+        $ngo = DB::table('ngos as n')
+            ->where('n.id', $ngo_id)
+            ->join('ngo_trans as nt', function ($join) use ($locale) {
+                $join->on('nt.ngo_id', '=', 'n.id')
+                    ->where('nt.language_name', $locale);
+            })
+            ->join('contacts as c', 'c.id', '=', 'n.contact_id')
+            ->join('emails as e', 'e.id', '=', 'n.email_id')
+            ->join('addresses as a', 'a.id', '=', 'n.address_id')
+            ->join('address_trans as at', function ($join) use ($locale) {
+                $join->on('at.address_id', '=', 'a.id')
+                    ->where('at.language_name', $locale);
+            })
+            ->join('district_trans as dt', function ($join) use ($locale) {
+                $join->on('dt.district_id', '=', 'a.district_id')
+                    ->where('dt.language_name', $locale);
+            })
+            ->join('province_trans as pt', function ($join) use ($locale) {
+                $join->on('pt.province_id', '=', 'a.province_id')
+                    ->where('pt.language_name', $locale);
+            })
+            ->join('country_trans as ct', function ($join) use ($locale) {
+                $join->on('ct.country_id', '=', 'n.place_of_establishment')
+                    ->where('ct.language_name', $locale);
+            })
+            ->select(
+                'n.id',
+                'n.registration_no',
+                'n.moe_registration_no',
+                'n.abbr',
+                'n.date_of_establishment',
+                'nt.name',
+                'nt.vision',
+                'nt.mission',
+                'nt.general_objective',
+                'nt.objective',
+                'c.value as contact',
+                'e.value as email',
+                'dt.value as district',
+                'dt.district_id',
+                'at.area',
+                'pt.value as province',
+                'pt.province_id',
+                'ct.value as country',
+            )
+            ->first();
+
+        $director =  DB::table('directors as d')
+            ->where('d.ngo_id', $ngo_id)
+            ->where('d.is_active', true)
+            ->join('director_trans as dirt', function ($join) use ($locale) {
+                $join->on('dirt.director_id', '=', 'd.id')
+                    ->where("dirt.language_name", $locale);
+            })
+            ->join('addresses as a', 'a.id', '=', 'd.address_id')
+            ->join('address_trans as at', function ($join) use ($locale) {
+                $join->on('at.address_id', '=', 'a.id')
+                    ->where('at.language_name', $locale);
+            })
+            ->join('district_trans as dt', function ($join) use ($locale) {
+                $join->on('dt.district_id', '=', 'a.district_id')
+                    ->where('dt.language_name', $locale);
+            })
+            ->join('province_trans as pt', function ($join) use ($locale) {
+                $join->on('pt.province_id', '=', 'a.province_id')
+                    ->where('pt.language_name', $locale);
+            })
+            ->join('country_trans as ct', function ($join) use ($locale) {
+                $join->on('ct.country_id', '=', 'd.country_id')
+                    ->where('ct.language_name', $locale);
+            })
+            ->select(
+                'dirt.name',
+                'dirt.last_name',
+                'dt.value as district',
+                'dt.district_id',
+                'pt.value as province',
+                'pt.province_id',
+                'ct.value as country',
+                'at.area',
+            )
+            ->first();
+        if (!$director) {
+            return "Director not found";
+        }
+        $irdDirector = DB::table('staff as s')
+            ->where('s.staff_type_id', StaffEnum::director->value)
+            ->join('staff_trans as st', function ($join) use ($locale) {
+                $join->on('st.staff_id', '=', 's.id')
+                    ->where("st.language_name", $locale);
+            })
+            ->select(
+                'st.name',
+            )
+            ->first();
+        if (!$irdDirector) {
+            return "IRD Director not found";
+        }
+        return [
+            'register_number' => $ngo->registration_no,
+            'date_of_sign' => '................',
+            'ngo_name' =>  $ngo->name,
+            'abbr' => $ngo->abbr,
+            'contact' => $ngo->contact,
+            'address' =>                      [
+                'complete_address' => $ngo->area . ',' . $ngo->district . ',' . $ngo->province . ',' . $ngo->country,
+                'area' => $ngo->area,
+                'district' => $ngo->district,
+                'province' => $ngo->province,
+                'country' => $ngo->country
+            ],
+            'director' => $director->name . " " . $director->last_name,
+            'director_address' => [
+                'complete_address' => $director->area . ',' . $director->district . ',' . $director->province . ',' . $director->country,
+                'area' => $director->area,
+                'district' => $director->district,
+                'province' => $director->province,
+                'country' => $director->country
+            ],
+            'email' => $ngo->email,
+            'establishment_date' => $ngo->date_of_establishment,
+            'place_of_establishment' => $ngo->country,
+            'ministry_economy_no' => $ngo->moe_registration_no,
+            'general_objective' => $ngo->general_objective,
+            'afganistan_objective' => $ngo->objective,
+            'mission' => $ngo->mission,
+            'vission' => $ngo->vision,
+            'ird_director' => $irdDirector->name,
+        ];
+
+
 
         // Fetch expired agreements in bulk using DB::table()
         return DB::table('agreements')

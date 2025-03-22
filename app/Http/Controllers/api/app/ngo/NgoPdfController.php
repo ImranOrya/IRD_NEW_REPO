@@ -2,16 +2,18 @@
 
 namespace App\Http\Controllers\api\app\ngo;
 
-use App\Enums\pdfFooter\PdfFooterEnum;
-use App\Enums\StaffEnum;
-use App\Http\Controllers\Controller;
-use App\Models\Director;
+use ZipArchive;
 use App\Models\Ngo;
 use App\Models\Staff;
-use App\Traits\Address\AddressTrait;
-use App\Traits\Report\PdfGeneratorTrait;
+use App\Enums\StaffEnum;
+use App\Models\Director;
 use Illuminate\Http\Request;
-use ZipArchive;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\App;
+use App\Http\Controllers\Controller;
+use App\Traits\Address\AddressTrait;
+use App\Enums\pdfFooter\PdfFooterEnum;
+use App\Traits\Report\PdfGeneratorTrait;
 
 class NgoPdfController extends Controller
 {
@@ -103,77 +105,136 @@ class NgoPdfController extends Controller
 
         return response()->download($zipFile)->deleteFileAfterSend(true);
     }
-    protected function loadNgoData($lang, $id)
+    protected function loadNgoData($locale, $id)
     {
+        $ngo = DB::table('ngos as n')
+            ->where('n.id', $id)
+            ->join('ngo_trans as nt', function ($join) use ($locale) {
+                $join->on('nt.ngo_id', '=', 'n.id')
+                    ->where('nt.language_name', $locale);
+            })
+            ->join('contacts as c', 'c.id', '=', 'n.contact_id')
+            ->join('emails as e', 'e.id', '=', 'n.email_id')
+            ->join('addresses as a', 'a.id', '=', 'n.address_id')
+            ->join('address_trans as at', function ($join) use ($locale) {
+                $join->on('at.address_id', '=', 'a.id')
+                    ->where('at.language_name', $locale);
+            })
+            ->join('district_trans as dt', function ($join) use ($locale) {
+                $join->on('dt.district_id', '=', 'a.district_id')
+                    ->where('dt.language_name', $locale);
+            })
+            ->join('province_trans as pt', function ($join) use ($locale) {
+                $join->on('pt.province_id', '=', 'a.province_id')
+                    ->where('pt.language_name', $locale);
+            })
+            ->join('country_trans as ct', function ($join) use ($locale) {
+                $join->on('ct.country_id', '=', 'n.place_of_establishment')
+                    ->where('ct.language_name', $locale);
+            })
+            ->select(
+                'n.id',
+                'n.registration_no',
+                'n.moe_registration_no',
+                'n.abbr',
+                'n.date_of_establishment',
+                'nt.name',
+                'nt.vision',
+                'nt.mission',
+                'nt.general_objective',
+                'nt.objective',
+                'c.value as contact',
+                'e.value as email',
+                'dt.value as district',
+                'dt.district_id',
+                'at.area',
+                'pt.value as province',
+                'pt.province_id',
+                'ct.value as country',
+            )
+            ->first();
 
-
-        $ngo = Ngo::with(
-            [
-                'ngoTrans' => function ($query) use ($lang) {
-                    $query->select('ngo_id', 'name', 'vision', 'mission', 'general_objective', 'objective')->where('language_name', $lang);
-                },
-                'email:id,value',
-                'contact:id,value',
-
-
-            ]
-
-        )->select(
-            'id',
-            'email_id',
-            'contact_id',
-            'address_id',
-            'abbr',
-            'registration_no',
-            'date_of_establishment',
-            'place_of_establishment',
-            'moe_registration_no',
-
-        )->where('id', $id)->first();
-
-        $director = Director::with([
-            'directorTrans' => function ($query) use ($lang) {
-                $query->select('name', 'last_name', 'director_id')->where('language_name', $lang);
-            }
-        ])
-            ->select('id', 'address_id')->where('ngo_id', $id)->first();
-
-        $irdDirector = Staff::with([
-            'staffTran' => function ($query) use ($lang) {
-                $query->select('staff_id', 'name')->where('language_name', $lang);
-            }
-        ])->select('id')->where('staff_type_id', StaffEnum::director->value)->first();
-
-
-        $ird_dir_name = $irdDirector->staffTran[0]->name;
-        $ngo_address =  $this->getCompleteAddress($ngo->address_id, $lang);
-        $director_address =  $this->getCompleteAddress($director->address_id, $lang);
-        $country_establishment = $this->getCountry($ngo->place_of_establishment, $lang);
-        // return $ngo->ngoTrans->name;
-
-
+        $director =  DB::table('directors as d')
+            ->where('d.ngo_id', $id)
+            ->where('d.is_active', true)
+            ->join('director_trans as dirt', function ($join) use ($locale) {
+                $join->on('dirt.director_id', '=', 'd.id')
+                    ->where("dirt.language_name", $locale);
+            })
+            ->join('addresses as a', 'a.id', '=', 'd.address_id')
+            ->join('address_trans as at', function ($join) use ($locale) {
+                $join->on('at.address_id', '=', 'a.id')
+                    ->where('at.language_name', $locale);
+            })
+            ->join('district_trans as dt', function ($join) use ($locale) {
+                $join->on('dt.district_id', '=', 'a.district_id')
+                    ->where('dt.language_name', $locale);
+            })
+            ->join('province_trans as pt', function ($join) use ($locale) {
+                $join->on('pt.province_id', '=', 'a.province_id')
+                    ->where('pt.language_name', $locale);
+            })
+            ->join('country_trans as ct', function ($join) use ($locale) {
+                $join->on('ct.country_id', '=', 'd.country_id')
+                    ->where('ct.language_name', $locale);
+            })
+            ->select(
+                'dirt.name',
+                'dirt.last_name',
+                'dt.value as district',
+                'dt.district_id',
+                'pt.value as province',
+                'pt.province_id',
+                'ct.value as country',
+                'at.area',
+            )
+            ->first();
+        if (!$director) {
+            return "Director not found";
+        }
+        $irdDirector = DB::table('staff as s')
+            ->where('s.staff_type_id', StaffEnum::director->value)
+            ->join('staff_trans as st', function ($join) use ($locale) {
+                $join->on('st.staff_id', '=', 's.id')
+                    ->where("st.language_name", $locale);
+            })
+            ->select(
+                'st.name',
+            )
+            ->first();
+        if (!$irdDirector) {
+            return "IRD Director not found";
+        }
         $data = [
             'register_number' => $ngo->registration_no,
             'date_of_sign' => '................',
-            'ngo_name' =>  $ngo->ngoTrans[0]->name ?? null,
-            'abbr' => $ngo->abbr ?? null,
-            'contact' => $ngo->contact->value,
-            'address' => $ngo_address['complete_address'],
-            'director' => $director->directorTrans[0]->name . '   ' . $director->directorTrans[0]->last_name,
-            'director_address' => $director_address['complete_address'],
-            'email' => $ngo->email->value,
+            'ngo_name' =>  $ngo->name,
+            'abbr' => $ngo->abbr,
+            'contact' => $ngo->contact,
+            'address' =>                      [
+                'complete_address' => $ngo->area . ',' . $ngo->district . ',' . $ngo->province . ',' . $ngo->country,
+                'area' => $ngo->area,
+                'district' => $ngo->district,
+                'province' => $ngo->province,
+                'country' => $ngo->country
+            ],
+            'director' => $director->name . " " . $director->last_name,
+            'director_address' => [
+                'complete_address' => $director->area . ',' . $director->district . ',' . $director->province . ',' . $director->country,
+                'area' => $director->area,
+                'district' => $director->district,
+                'province' => $director->province,
+                'country' => $director->country
+            ],
+            'email' => $ngo->email,
             'establishment_date' => $ngo->date_of_establishment,
-            'place_of_establishment' => $country_establishment,
+            'place_of_establishment' => $ngo->country,
             'ministry_economy_no' => $ngo->moe_registration_no,
-            'general_objective' => $ngo->ngoTrans[0]->general_objective ?? null,
-            'afganistan_objective' => $ngo->ngoTrans[0]->objective ?? null,
-            'mission' => $ngo->ngoTrans[0]->mission ?? null,
-            'vission' => $ngo->ngoTrans[0]->vision ?? null,
-            'ird_director' => $ird_dir_name,
-            // 'represetetor' =>
-
-
-
+            'general_objective' => $ngo->general_objective,
+            'afganistan_objective' => $ngo->objective,
+            'mission' => $ngo->mission,
+            'vission' => $ngo->vision,
+            'ird_director' => $irdDirector->name,
         ];
         return $data;
     }

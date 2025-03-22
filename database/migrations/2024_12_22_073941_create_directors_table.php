@@ -43,6 +43,8 @@ return new class extends Migration
             $table->foreign('contact_id')->references('id')->on('contacts')
                 ->onUpdate('cascade')
                 ->onDelete('no action');
+            $table->string('userable_type');
+            $table->unsignedBigInteger('userable_id');
             $table->timestamps();
         });
     }

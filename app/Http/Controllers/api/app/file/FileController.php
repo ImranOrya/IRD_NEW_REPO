@@ -54,7 +54,7 @@ class FileController extends Controller
             $checklist_id = $request->checklist_id;
             $file = $save->getFile();
             // 1. Validate checklist
-            $validationResult = $this->checkListCheck($file, $request->checklist_id);
+            $validationResult = $this->checkFileWithList($file, $request->checklist_id);
             if ($validationResult !== true) {
                 $filePath = $file->getRealPath();
                 unlink($filePath);
@@ -96,7 +96,7 @@ class FileController extends Controller
             $file = $save->getFile();
 
             // 1. Validate checklist
-            $validationResult = $this->checkListCheck($file, $request->checklist_id);
+            $validationResult = $this->checkFileWithList($file, $request->checklist_id);
             if ($validationResult !== true) {
                 $filePath = $file->getRealPath();
                 unlink($filePath);

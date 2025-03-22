@@ -51,13 +51,14 @@ class PermissionController extends Controller
             'permissions' => "required"
         ]);
         $permissions = $request->permissions;
-        $user_id = $request->user_id;
-        $result = $this->permissionRepository->editUserPermission($user_id, $permissions);
-        if ($result == 400) {
+        $user = User::where('id', $request->user_id)->first();
+        if (!$user) {
             return response()->json([
                 'message' => __('app_translation.user_not_found'),
             ], 404, [], JSON_UNESCAPED_UNICODE);
-        } else if ($result == 401) {
+        }
+        $result = $this->permissionRepository->storeUserPermission($user, $permissions);
+        if ($result == 401) {
             return response()->json([
                 'message' => __('app_translation.unauthorized_role_per'),
             ], 403, [], JSON_UNESCAPED_UNICODE);

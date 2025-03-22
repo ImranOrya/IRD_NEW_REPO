@@ -12,14 +12,15 @@ use App\Enums\LanguageEnum;
 use App\Models\AddressTran;
 use Illuminate\Http\Request;
 use App\Enums\Type\StatusTypeEnum;
+use App\Traits\Helper\HelperTrait;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\App;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\app\ngo\NgoInfoUpdateRequest;
 use App\Http\Requests\app\ngo\NgoUpdatedMoreInformationRequest;
 
 class EditesNgoController extends Controller
 {
+    use HelperTrait;
     public function updateInfo(NgoInfoUpdateRequest $request)
     {
         $request->validated();
@@ -33,30 +34,40 @@ class EditesNgoController extends Controller
         }
         // Begin transaction
         DB::beginTransaction();
-        // 2. Get Email
         $email = Email::where('value', $request->email)
-            ->select('id', 'value')->first();
+            ->select('id')->first();
         // Email Is taken by someone
-        if ($email->id !== $ngo->email_id) {
-            return response()->json([
-                'message' => __('app_translation.email_exist'),
-            ], 409, [], JSON_UNESCAPED_UNICODE); // HTTP Status 409 Conflict
+        if ($email) {
+            if ($email->id == $ngo->email_id) {
+                $email->value = $request->email;
+                $email->save();
+            } else {
+                return response()->json([
+                    'message' => __('app_translation.email_exist'),
+                ], 409, [], JSON_UNESCAPED_UNICODE);
+            }
         } else {
-            // Update
+            $email = Email::where('id', $ngo->email_id)->first();
             $email->value = $request->email;
+            $email->save();
         }
-        // 3. Get Contact
         $contact = Contact::where('value', $request->contact)
-            ->select('id', 'value')->first();
-        // Contact Is taken by someone
-        if ($contact->id !== $ngo->contact_id) {
-            return response()->json([
-                'message' => __('app_translation.contact_exist'),
-            ], 409, [], JSON_UNESCAPED_UNICODE); // HTTP Status 409 Conflict
+            ->select('id')->first();
+        if ($contact) {
+            if ($contact->id == $ngo->contact_id) {
+                $contact->value = $request->contact;
+                $contact->save();
+            } else {
+                return response()->json([
+                    'message' => __('app_translation.contact_exist'),
+                ], 409, [], JSON_UNESCAPED_UNICODE);
+            }
         } else {
-            // Update
+            $contact = Contact::where('id', $ngo->contact_id)->first();
             $contact->value = $request->contact;
+            $contact->save();
         }
+
 
         $address = Address::where('id', $ngo->address_id)
             ->select("district_id", "id", "province_id")
@@ -69,13 +80,9 @@ class EditesNgoController extends Controller
 
         // 4. Update Ngo information
         $ngo->abbr = $request->abbr;
-        $ngo->registration_no = $request->registration_no;
-        $ngo->moe_registration_no = $request->moe_registration_no;
         $ngo->date_of_establishment = $request->establishment_date;
-        $ngo->place_of_establishment = $request->place_of_establishment['id'];
         $address->province_id = $request->province['id'];
         $address->district_id = $request->district['id'];
-        $ngo->ngo_type_id = $request->type['id'];
 
         // * Translations
         $addressTrans = AddressTran::where('address_id', $address->id)->get();
@@ -92,8 +99,6 @@ class EditesNgoController extends Controller
         }
 
         // 5. Completed
-        $email->save();
-        $contact->save();
         $ngo->save();
         $address->save();
 
@@ -103,34 +108,6 @@ class EditesNgoController extends Controller
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 
-    public function updateProfile(Request $request)
-    {
-        $request->validate([
-            'profile' => 'nullable|mimes:jpeg,png,jpg|max:2048',
-            'id' => 'required',
-        ]);
-        $ngo = Ngo::find($request->id);
-        if ($ngo) {
-            $path = $this->storeProfile($request, 'ngo-profile');
-            if ($path != null) {
-                // 1. delete old profile
-                $deletePath = storage_path('app/' . "{$ngo->profile}");
-                if (file_exists($deletePath) && $ngo->profile != null) {
-                    unlink($deletePath);
-                }
-                // 2. Update the profile
-                $ngo->profile = $path;
-            }
-            $ngo->save();
-            return response()->json([
-                'message' => __('app_translation.profile_changed'),
-                "profile" => $ngo->profile
-            ], 200, [], JSON_UNESCAPED_UNICODE);
-        } else
-            return response()->json([
-                'message' => __('app_translation.not_found'),
-            ], 404, [], JSON_UNESCAPED_UNICODE);
-    }
 
     public function UpdateMoreInformation(NgoUpdatedMoreInformationRequest $request)
     {
@@ -189,7 +166,8 @@ class EditesNgoController extends Controller
                 'ngo_id' => $validatedData['ngo_id'],
                 'comment' => $validatedData['comment'],
                 'is_active' => 1,
-                "user_id" => $authUser->id
+                'userable_id' => $authUser->id,
+                'userable_type' => $this->getModelName(get_class($authUser)),
             ]);
             $status->is_active = 0;
             $status->save();

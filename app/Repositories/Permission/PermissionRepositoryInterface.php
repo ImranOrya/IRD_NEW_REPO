@@ -50,9 +50,9 @@ interface PermissionRepositoryInterface
      * Retrieve Formatted Role permissions.
      * 
      *
-     * @param string user_id
+     * @param mix user
      * @param @var mixed $permissions
      * @return @var mixed $Response
      */
-    public function editUserPermission($user_id, $permissions);
+    public function storeUserPermission($user_id, $permissions);
 }

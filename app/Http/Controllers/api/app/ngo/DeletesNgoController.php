@@ -56,7 +56,6 @@ class DeletesNgoController extends Controller
         $request->validate([
             'task_type' => "required"
         ]);
-        $locale = App::getLocale();
         $authUser = $request->user();
         $task_type = $request->task_type;
 
@@ -65,50 +64,8 @@ class DeletesNgoController extends Controller
             $task_type,
             $id
         );
-        // Get registered data
-        $query = $this->ngoRepository->ngo();  // Start with the base query
-        $this->ngoRepository->typeTransJoin($query, $locale)
-            ->emailJoin($query)
-            ->contactJoin($query)
-            ->addressJoin($query);
-        $ngo = $query->select(
-            'n.abbr',
-            'n.ngo_type_id',
-            'ntt.value as type_name',
-            'n.registration_no',
-            'n.moe_registration_no',
-            'n.place_of_establishment',
-            'n.date_of_establishment',
-            'a.province_id',
-            'a.district_id',
-            'a.id as address_id',
-            'e.value as email',
-            'c.value as contact'
-        )->where('n.id', $id)->first();
-
-        // Fetching translations using a separate query
-        $translations = $this->ngoNameTrans($id);
-        $areaTrans = $this->getAddressAreaTran($ngo->address_id);
-        $address = $this->getCompleteAddress($ngo->address_id, $locale);
-
-
-        $data = [
-            'name_english' => $translations['en']->name ?? null,
-            'name_pashto' => $translations['ps']->name ?? null,
-            'name_farsi' => $translations['fa']->name ?? null,
-            'abbr' => $ngo->abbr,
-            'type' => ['name' => $ngo->type_name, 'id' => $ngo->ngo_type_id],
-            'contact' => $ngo->contact,
-            'email' => $ngo->email,
-            'province' => ['name' => $address['province'], 'id' => $ngo->province_id],
-            'district' => ['name' => $address['district'], 'id' => $ngo->district_id],
-            'area_english' => $areaTrans['en']->area ?? '',
-            'area_pashto' => $areaTrans['ps']->area ?? '',
-            'area_farsi' => $areaTrans['fa']->area ?? '',
-        ];
         return response()->json([
             "message" => __('app_translation.success'),
-            'ngo' => $data,
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 }

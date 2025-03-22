@@ -41,6 +41,47 @@ class CheckListController extends Controller
             'checklist' => $this->getChecklistsWithExclude($exclude)
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
+    public function ngoExtend(Request $request)
+    {
+        $new_director = $request->query('n_dir');
+        $new_representor = $request->query('n_r');
+        $exclude = [
+            CheckListEnum::director_work_permit->value,
+            CheckListEnum::ngo_register_form_en->value,
+            CheckListEnum::ngo_register_form_fa->value,
+            CheckListEnum::ngo_register_form_ps->value,
+        ];
+        if ($new_director == 'false') {
+            array_push($exclude, CheckListEnum::director_nid->value);
+        }
+        if ($new_representor == 'false') {
+            array_push($exclude, CheckListEnum::ngo_representor_letter->value);
+        }
+
+        return response()->json([
+            'checklist' => $this->getChecklistsWithExclude($exclude),
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
+    public function ngoExtendAbroadDirector(Request $request)
+    {
+        $new_director = $request->query('n_dir');
+        $new_representor = $request->query('n_r');
+        $exclude = [
+            CheckListEnum::director_work_permit->value,
+            CheckListEnum::ngo_register_form_en->value,
+            CheckListEnum::ngo_register_form_fa->value,
+            CheckListEnum::ngo_register_form_ps->value,
+        ];
+        if ($new_director == 'false') {
+            array_push($exclude, CheckListEnum::director_nid->value);
+        }
+        if ($new_representor == 'false') {
+            array_push($exclude, CheckListEnum::ngo_representor_letter->value);
+        }
+        return response()->json([
+            'checklist' => $this->getChecklistsWithExclude($exclude)
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
     public function projectRegister()
     {
         $tr =  [];
@@ -54,9 +95,11 @@ class CheckListController extends Controller
         $request->validated();
         $authUser = $request->user();
         $convertedMimes = [];
+        $convertedAccept = [];
         $convertedExtensions = [];
         foreach ($request->file_type as $extension) {
             $convertedMimes[] = $extension['frontEndName'];
+            $convertedAccept[] = $extension['frontEndInput'];
             $convertedExtensions[] = $extension['name'];
         }
 
@@ -68,6 +111,7 @@ class CheckListController extends Controller
             "user_id" => $authUser->id,
             "acceptable_extensions" => implode(',', $convertedExtensions),
             "acceptable_mimes" => implode(',', $convertedMimes),
+            "accept" => implode(',', $convertedAccept),
         ]);
         foreach (LanguageEnum::LANGUAGES as $code => $name) {
             CheckListTrans::create([
@@ -130,10 +174,12 @@ class CheckListController extends Controller
         $convertedExtensions = [];
         foreach ($request->file_type as $extension) {
             $convertedMimes[] = $extension['frontEndName'];
+            $convertedAccept[] = $extension['frontEndInput'];
             $convertedExtensions[] = $extension['name'];
         }
 
         $checklist->acceptable_mimes = implode(',', $convertedMimes);
+        $checklist->accept = implode(',', $convertedAccept);
         $checklist->acceptable_extensions = implode(',', $convertedExtensions);
         $checklist->check_list_type_id = $type->id;
         $checklist->active = $request->status;
@@ -162,7 +208,7 @@ class CheckListController extends Controller
         $name = $request->name_english;
         if ($locale == LanguageEnum::farsi->value) {
             $name = $request->name_farsi;
-        } else {
+        } else if ($locale == LanguageEnum::pashto->value) {
             $name = $request->name_pashto;
         }
         $tr =  [
@@ -225,28 +271,6 @@ class CheckListController extends Controller
         );
     }
 
-    public function validationChecklist($id)
-    {
-        $checklist = DB::table('check_lists as cl')
-            ->where('cl.id', $id)
-            ->where('cl.active', true)
-            ->select(
-                'cl.id',
-                'cl.acceptable_mimes',
-                'cl.acceptable_extensions',
-                'cl.description',
-                'cl.file_size',
-            )
-            ->first();
-
-
-        return response()->json(
-            $checklist,
-            200,
-            [],
-            JSON_UNESCAPED_UNICODE
-        );
-    }
     public function checklist($id)
     {
         $locale = App::getLocale();
@@ -270,6 +294,7 @@ class CheckListController extends Controller
             ->select(
                 'cl.id',
                 'cl.acceptable_mimes',
+                'cl.accept',
                 'cl.acceptable_extensions',
                 'cl.description',
                 'cl.active as status',
@@ -289,6 +314,7 @@ class CheckListController extends Controller
             // Exploding the comma-separated strings into arrays
             $acceptableMimes = explode(',', $checklist->acceptable_mimes);
             $acceptableExtensions = explode(',', $checklist->acceptable_extensions);
+            $acceptableAccept = explode(',', $checklist->accept);
 
             // Combine them into an array of objects
             $combined = [];
@@ -298,7 +324,8 @@ class CheckListController extends Controller
                     $combined[] = [
                         'name' => $acceptableExtensions[$index],
                         "label" => $mime,
-                        'frontEndName' => $mime
+                        'frontEndName' => $mime,
+                        'frontEndInput' => $acceptableAccept[$index],
                     ];
                 }
             }
@@ -310,6 +337,7 @@ class CheckListController extends Controller
         // Remove unwanted data from the checklist
         unset($checklist->acceptable_mimes);
         unset($checklist->acceptable_extensions);
+        unset($checklist->accept);
         $tr =  [
             "id" => $checklist->id,
             "name_farsi" => $checklist->name_farsi,
@@ -393,6 +421,7 @@ class CheckListController extends Controller
                 'cl.id',
                 'cl.file_size',
                 'cl.acceptable_mimes',
+                'cl.accept',
                 'cl.acceptable_extensions',
                 'cl.description'
             )
@@ -412,11 +441,33 @@ class CheckListController extends Controller
                 'clt.value as name',
                 'cl.id',
                 'cl.file_size',
+                'cl.accept',
                 'cl.acceptable_mimes',
                 'cl.acceptable_extensions',
                 'cl.description'
             )
             ->orderBy('cl.id')
             ->get();
+    }
+
+    public function validationChecklist($id)
+    {
+        $checklist = DB::table('check_lists as cl')
+            ->where('cl.id', $id)
+            ->where('cl.active', true)
+            ->select(
+                'cl.id',
+                'cl.acceptable_mimes',
+                'cl.acceptable_extensions',
+                'cl.description',
+                'cl.file_size',
+            )
+            ->first();
+        return response()->json(
+            $checklist,
+            200,
+            [],
+            JSON_UNESCAPED_UNICODE
+        );
     }
 }

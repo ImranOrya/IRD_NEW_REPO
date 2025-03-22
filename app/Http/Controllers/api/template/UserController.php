@@ -2,32 +2,30 @@
 
 namespace App\Http\Controllers\api\template;
 
-use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Email;
 use App\Enums\RoleEnum;
 use App\Models\Contact;
 use App\Models\ModelJob;
-use App\Enums\LanguageEnum;
 use App\Models\Destination;
-use App\Models\UsersEnView;
-use App\Models\UsersFaView;
-use App\Models\UsersPsView;
 use Illuminate\Http\Request;
-use App\Models\RolePermission;
-use App\Models\UserPermission;
+use App\Traits\Helper\HelperTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\App;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use function PHPUnit\Framework\isEmpty;
 use App\Repositories\User\UserRepositoryInterface;
 use App\Http\Requests\template\user\UpdateUserRequest;
 use App\Http\Requests\template\user\UserRegisterRequest;
+
 use App\Http\Requests\template\user\UpdateUserPasswordRequest;
 use App\Repositories\Permission\PermissionRepositoryInterface;
 
 class UserController extends Controller
 {
+    use HelperTrait;
+
     protected $userRepository;
     protected $permissionRepository;
 
@@ -206,8 +204,8 @@ class UserController extends Controller
             "email_id" => $email->id,
             "password" => Hash::make($request->password),
             "role_id" => $request->role,
-            "job_id" => $request->job,
-            "destination_id" => $request->destination,
+            "job_id" => $request->job_id,
+            "destination_id" => $request->destination_id,
             "contact_id" => $contact ? $contact->id : $contact,
             "profile" => null,
             "status" => $request->status,
@@ -215,7 +213,7 @@ class UserController extends Controller
         ]);
 
         // 4. Add user permissions
-        $result = $this->permissionRepository->editUserPermission($newUser->id, $request->permissions);
+        $result = $this->permissionRepository->storeUserPermission($newUser, $request->permissions);
         if ($result == 400) {
             return response()->json([
                 'message' => __('app_translation.user_not_found'),
@@ -230,7 +228,6 @@ class UserController extends Controller
             ], 404, [], JSON_UNESCAPED_UNICODE);
         }
         DB::commit();
-        $newUser->load('job', 'destination'); // Adjust according to your relationships
         return response()->json([
             'user' => [
                 "id" => $newUser->id,
@@ -238,37 +235,59 @@ class UserController extends Controller
                 'email' => $request->email,
                 "profile" => $newUser->profile,
                 "status" => $newUser->status,
-                "destination" => $this->getTranslationWithNameColumn($newUser->destination, Destination::class),
-                "job" => $this->getTranslationWithNameColumn($newUser->job, ModelJob::class),
+                "destination" => $request->destination,
+                "job" => $request->job,
                 "created_at" => $newUser->created_at,
             ],
             'message' => __('app_translation.success'),
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
-    public function update(UpdateUserRequest $request)
+    public function updateInformation(UpdateUserRequest $request)
     {
         $request->validated();
         // 1. User is passed from middleware
         DB::beginTransaction();
         $user = $request->get('validatedUser');
         if ($user) {
-            // 2. Check email
-            $email = Email::find($user->email_id);
-            if ($email && $email->value !== $request->email) {
-                // 2.1 Email is changed
-                // Delete old email
-                $email->delete();
-                // Add new email
-                $newEmail = Email::create([
-                    "value" => $request->email
-                ]);
-                $user->email_id = $newEmail->id;
+            $email = Email::where('value', $request->email)
+                ->select('id')->first();
+            // Email Is taken by someone
+            if ($email) {
+                if ($email->id == $user->email_id) {
+                    $email->value = $request->email;
+                    $email->save();
+                } else {
+                    return response()->json([
+                        'message' => __('app_translation.email_exist'),
+                    ], 409, [], JSON_UNESCAPED_UNICODE);
+                }
+            } else {
+                $email = Email::where('id', $user->email_id)->first();
+                $email->value = $request->email;
+                $email->save();
             }
-            // 3. Check contact
-            if (!$this->addOrRemoveContact($user, $request)) {
-                return response()->json([
-                    'message' => __('app_translation.contact_exist'),
-                ], 400, [], JSON_UNESCAPED_UNICODE);
+            if (isset($request->contact)) {
+                $contact = Contact::where('value', $request->contact)
+                    ->select('id')->first();
+                if ($contact) {
+                    if ($contact->id == $user->contact_id) {
+                        $contact->value = $request->contact;
+                        $contact->save();
+                    } else {
+                        return response()->json([
+                            'message' => __('app_translation.contact_exist'),
+                        ], 409, [], JSON_UNESCAPED_UNICODE);
+                    }
+                } else {
+                    if (isset($user->contact_id)) {
+                        $contact = Contact::where('id', $user->contact_id)->first();
+                        $contact->value = $request->contact;
+                        $contact->save();
+                    } else {
+                        $contact = Contact::create(['value' => $request->contact]);
+                        $user->contact_id = $contact->id;
+                    }
+                }
             }
 
             // 4. Update User other attributes
@@ -287,7 +306,7 @@ class UserController extends Controller
             ], 200, [], JSON_UNESCAPED_UNICODE);
         }
         return response()->json([
-            'message' => __('app_translation.not_found'),
+            'message' => __('app_translation.user_not_found'),
         ], 404, [], JSON_UNESCAPED_UNICODE);
     }
     public function destroy($id)
@@ -315,33 +334,47 @@ class UserController extends Controller
             ], 400, [], JSON_UNESCAPED_UNICODE);
         }
     }
-    public function updateProfile(Request $request)
+    public function updateProfilePicture(Request $request)
     {
         $request->validate([
             'profile' => 'nullable|mimes:jpeg,png,jpg|max:2048',
             'id' => 'required',
         ]);
         $user = User::find($request->id);
-        if ($user) {
-            $path = $this->storeProfile($request);
-            if ($path != null) {
-                // 1. delete old profile
-                $deletePath = storage_path('app/' . "{$user->profile}");
-                if (file_exists($deletePath) && $user->profile != null) {
-                    unlink($deletePath);
-                }
-                // 2. Update the profile
-                $user->profile = $path;
-            }
-            $user->save();
+        if (!$user) {
             return response()->json([
-                'message' => __('app_translation.profile_changed'),
-                "profile" => $user->profile
-            ], 200, [], JSON_UNESCAPED_UNICODE);
-        } else
-            return response()->json([
-                'message' => __('app_translation.not_found'),
+                'message' => __('app_translation.user_not_found'),
             ], 404, [], JSON_UNESCAPED_UNICODE);
+        }
+        $path = $this->storeProfile($request);
+        if ($path != null) {
+            // 1. delete old profile
+            $this->deleteFile($user->profile);
+            // 2. Update the profile
+            $user->profile = $path;
+        }
+        $user->save();
+        return response()->json([
+            'message' => __('app_translation.profile_changed'),
+            "profile" => $user->profile
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
+    public function deleteProfilePicture($id)
+    {
+        $user = User::find($id);
+        if (!$user) {
+            return response()->json([
+                'message' => __('app_translation.user_not_found'),
+            ], 404, [], JSON_UNESCAPED_UNICODE);
+        }
+        // 1. delete old profile
+        $this->deleteFile($user->profile);
+        // 2. Update the profile
+        $user->profile = null;
+        $user->save();
+        return response()->json([
+            'message' => __('app_translation.success')
+        ], 200, [], JSON_UNESCAPED_UNICODE);
     }
     public function changePassword(UpdateUserPasswordRequest $request)
     {
@@ -369,25 +402,6 @@ class UserController extends Controller
         return response()->json([
             'message' => __('app_translation.success'),
         ], 200, [], JSON_UNESCAPED_UNICODE);
-    }
-    public function deleteProfile($id)
-    {
-        $user = User::find($id);
-        if ($user) {
-            $deletePath = storage_path('app/' . "{$user->profile}");
-            if (file_exists($deletePath) && $user->profile != null) {
-                unlink($deletePath);
-            }
-            // 2. Update the profile
-            $user->profile = null;
-            $user->save();
-            return response()->json([
-                'message' => __('app_translation.profile_changed')
-            ], 200, [], JSON_UNESCAPED_UNICODE);
-        } else
-            return response()->json([
-                'message' => __('app_translation.not_found'),
-            ], 404, [], JSON_UNESCAPED_UNICODE);
     }
     public function userCount()
     {

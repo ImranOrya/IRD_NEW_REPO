@@ -10,5 +10,6 @@ interface UserRepositoryInterface
      * @param string $user_id
      * @return mix
      */
-    public function authFormattedPermissions($user_id);
+    public function userAuthFormattedPermissions($user_id);
+    public function ngoAuthFormattedPermissions($user_id);
 }

@@ -39,11 +39,20 @@ class DailyTask extends Command
         $now = Carbon::now('UTC');
         DB::beginTransaction();
         try {
-            // Fetch expired agreements in bulk using DB::table()
-            $expiredAgreements = DB::table('agreements')
-                ->where('end_date', '<', $now->toIso8601String())
-                ->pluck('ngo_id'); // Fetch only ngo_id
-
+            $status_type_id = [
+                StatusTypeEnum::registered->value,
+                StatusTypeEnum::blocked->value
+            ];
+            $expiredAgreements = DB::table('agreements as a')
+                ->select('a.ngo_id', DB::raw('MAX(a.end_date) as max_end_date'), DB::raw('MAX(a.id) as max_id'))
+                ->where('a.end_date', '<', $now->toIso8601String())
+                ->groupBy('a.ngo_id')
+                ->join('ngo_statuses as ns', function ($join) use (&$status_type_id) {
+                    $join->on('ns.ngo_id', '=', 'a.ngo_id')
+                        ->where('ns.is_active', true)
+                        ->whereIn('ns.status_type_id', $status_type_id);
+                })
+                ->pluck('a.ngo_id');
             // Check if we have expired agreements
             if ($expiredAgreements->isNotEmpty()) {
                 // Prepare data for bulk insert
@@ -56,7 +65,8 @@ class DailyTask extends Command
                         'is_active' => 1,
                         'status_type_id' => StatusTypeEnum::registration_expired->value,
                         'comment' => "Added By System",
-                        "user_id" => RoleEnum::super->value,
+                        "userable_id" => RoleEnum::super->value,
+                        "userable_type" => "System",
                         "created_at" => $now,
                         "updated_at" => $now,
                     ];

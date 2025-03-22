@@ -137,12 +137,8 @@ class PermissionRepository implements PermissionRepositoryInterface
     /*
     USER
     */
-    public function editUserPermission($user_id, $permissions)
+    public function storeUserPermission($user, $permissions)
     {
-        $user = User::where('id', $user_id)->first();
-        if (!$user) {
-            return 400;
-        }
         $rolePermissions = $this->rolePermissions($user->role_id);
         $formattedRolePermissions = $this->formatRolePermissions($rolePermissions);
 
@@ -174,7 +170,7 @@ class PermissionRepository implements PermissionRepositoryInterface
                         "add" => $permission['add'],
                         "view" => $permission['view'],
                         "visible" => true,
-                        "user_id" => $user_id,
+                        "user_id" => $user->id,
                         "permission" => $permission['permission'],
                     ]);
                 }

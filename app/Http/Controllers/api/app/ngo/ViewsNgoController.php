@@ -2,21 +2,14 @@
 
 namespace App\Http\Controllers\api\app\ngo;
 
-use Carbon\Carbon;
-use App\Models\Ngo;
-use App\Models\Document;
-use App\Models\Agreement;
 use App\Enums\LanguageEnum;
-use App\Models\PendingTask;
 use App\Traits\Ngo\NgoTrait;
 use Illuminate\Http\Request;
 use App\Enums\Type\TaskTypeEnum;
 use App\Enums\Type\StatusTypeEnum;
-use App\Models\PendingTaskContent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\App;
 use App\Http\Controllers\Controller;
-use App\Models\Email;
 use App\Traits\Address\AddressTrait;
 use App\Repositories\ngo\NgoRepositoryInterface;
 use App\Repositories\Task\PendingTaskRepositoryInterface;
@@ -43,27 +36,40 @@ class ViewsNgoController extends Controller
         $page = $request->input('page', 1); // Current page
         $locale = App::getLocale();
 
-        $query = $this->ngoRepository->ngo();  // Start with the base query
-        $this->ngoRepository->transJoin($query, $locale)
-            ->statusJoin($query)
-            ->statusTypeTransJoin($query, $locale)
-            ->typeTransJoin($query, $locale)
-            ->emailJoin($query)
-            ->contactJoin($query);
-        $query->select(
-            'n.id',
-            'n.profile',
-            'n.registration_no',
-            'n.date_of_establishment as establishment_date',
-            'stt.status_type_id as status_id',
-            'stt.name as status',
-            'nt.name',
-            'ntt.ngo_type_id as type_id',
-            'ntt.value as type',
-            'e.value as email',
-            'c.value as contact',
-            'n.created_at'
-        );
+        $query = DB::table('ngos as n')
+            ->join('ngo_trans as nt', function ($join) use ($locale) {
+                $join->on('nt.ngo_id', '=', 'n.id')
+                    ->where('nt.language_name', $locale);
+            })
+            ->join('ngo_statuses as ns', function ($join) {
+                $join->on('ns.ngo_id', '=', 'n.id')
+                    ->where('ns.is_active', true);
+            })
+            ->join('status_type_trans as stt', function ($join) use ($locale) {
+                $join->on('stt.status_type_id', '=', 'ns.status_type_id')
+                    ->where('stt.language_name', $locale);
+            })
+            ->join('ngo_type_trans as ntt', function ($join) use ($locale) {
+                $join->on('ntt.ngo_type_id', '=', 'n.ngo_type_id')
+                    ->where('ntt.language_name', $locale);
+            })
+            ->join('emails as e', 'e.id', '=', 'n.email_id')
+            ->join('contacts as c', 'c.id', '=', 'n.contact_id')
+            ->select(
+                'n.id',
+                'n.profile',
+                'n.registration_no',
+                'n.date_of_establishment as establishment_date',
+                'stt.status_type_id as status_id',
+                'stt.name as status',
+                'nt.name',
+                'ntt.ngo_type_id as type_id',
+                'ntt.value as type',
+                'e.value as email',
+                'c.value as contact',
+                'n.created_at'
+            );
+
         $this->applyDate($query, $request);
         $this->applyFilters($query, $request);
         $this->applySearch($query, $request);
@@ -111,11 +117,12 @@ class ViewsNgoController extends Controller
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 
+
     public function startRegisterForm(Request $request, $ngo_id)
     {
         $locale = App::getLocale();
 
-        $pendingTaskContent = $this->pendingTask($request, $ngo_id);
+        $pendingTaskContent = $this->pendingTaskRepository->pendingTask($request, TaskTypeEnum::ngo_registeration->value, $ngo_id);
         if ($pendingTaskContent['content']) {
             return response()->json([
                 'message' => __('app_translation.success'),
@@ -123,8 +130,7 @@ class ViewsNgoController extends Controller
             ], 200);
         }
 
-        $query = $this->ngoRepository->ngo($ngo_id);
-        $data = $this->ngoRepository->startRegisterFormInfo($query, $ngo_id, $locale);
+        $data = $this->ngoRepository->startRegisterFormInfo($ngo_id, $locale);
         if (!$data) {
             return response()->json([
                 'message' => __('app_translation.ngo_not_found'),
@@ -132,16 +138,52 @@ class ViewsNgoController extends Controller
         }
 
         return response()->json([
-            'message' => __('app_translation.success'),
             'ngo' => $data,
         ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    public function startExtendForm(Request $request, $ngo_id)
+    {
+        $locale = App::getLocale();
+        $pendingTaskContent = $this->pendingTaskRepository->pendingTask($request, TaskTypeEnum::ngo_agreement_extend->value, $ngo_id);
+        if ($pendingTaskContent['content']) {
+            return response()->json([
+                'message' => __('app_translation.success'),
+                'content' => $pendingTaskContent['content']
+            ], 200);
+        }
+
+        $data = $this->ngoRepository->afterRegisterFormInfo($ngo_id, $locale);
+        if (!$data) {
+            return response()->json([
+                'message' => __('app_translation.ngo_not_found'),
+            ], 404);
+        }
+
+        return response()->json([
+            'ngo' => $data,
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
+    public function currentStatus($ngo_id)
+    {
+        $locale = App::getLocale();
+        $query = $this->ngoRepository->ngo($ngo_id);  // Start with the base query
+        $this->ngoRepository->statusJoin($query, $ngo_id, $locale);
+        $status = $query->select('ns.status_type_id')
+            ->first();
+        if (!$status) {
+            return response()->json([
+                'message' => __('app_translation.ngo_status_not_found'),
+            ], 404);
+        }
+
+        return response()->json($status, 200, [], JSON_UNESCAPED_UNICODE);
     }
 
     public function ngoDetail($ngo_id)
     {
         $locale = App::getLocale();
-        $query = $this->ngoRepository->ngo($ngo_id);  // Start with the base query
-        $data = $this->ngoRepository->afterRegisterFormInfo($query, $ngo_id, $locale);
+        $data = $this->ngoRepository->afterRegisterFormInfo($ngo_id, $locale);
         if (!$data) {
             return response()->json([
                 'message' => __('app_translation.ngo_not_found'),
@@ -153,30 +195,6 @@ class ViewsNgoController extends Controller
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 
-    public function pendingTask(Request $request, $id): array
-    {
-        // Retrieve the first matching pending task
-        $task = $this->pendingTaskRepository->pendingTaskExist(
-            $request->user(),
-            TaskTypeEnum::ngo_registeration,
-            $id,
-        );
-
-        if ($task) {
-            // Fetch and concatenate content
-            $pendingTask = PendingTaskContent::where('pending_task_id', $task->id)
-                ->select('content', 'id')
-                ->orderBy('id', 'desc')
-                ->first();
-            return [
-                'content' => $pendingTask ? $pendingTask->content : null
-            ];
-        }
-
-        return [
-            'content' => null
-        ];
-    }
 
     public function moreInformation($id)
     {

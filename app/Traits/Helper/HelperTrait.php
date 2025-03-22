@@ -4,6 +4,10 @@ namespace App\Traits\Helper;
 
 use App\Models\CheckList;
 use Illuminate\Support\Str;
+use App\Enums\PermissionEnum;
+use App\Models\NgoPermission;
+use App\Enums\SubPermissionEnum;
+use App\Models\NgoPermissionSub;
 use Illuminate\Http\UploadedFile;
 
 trait HelperTrait
@@ -26,19 +30,28 @@ trait HelperTrait
         return file_exists(storage_path() . "/app/{$filePath}");
     }
 
+    public function deleteFile($filePath)
+    {
+        $deletePath = storage_path('app/' . "{$filePath}");
+        if (is_file($deletePath)) {
+            return unlink($deletePath);
+        }
+        return false;
+    }
+
     public function deleteTempFile($filePath)
     {
         return unlink(storage_path() . "/app/{$filePath}");
     }
     public function ngoRegisterFolder($ngo_id, $agreement_id, $check_list_id)
     {
-        return storage_path() . "/app/private/ngos/{$ngo_id}/register/{$agreement_id}/{$check_list_id}/";
+        return storage_path() . "/app/private/ngos/ngo_{$ngo_id}/register/agreement_{$agreement_id}/checlist_{$check_list_id}/";
     }
     public function ngoRegisterDBPath($ngo_id, $agreement_id, $check_list_id, $fileName)
     {
-        return "private/ngos/{$ngo_id}/register/{$agreement_id}/{$check_list_id}/" . $fileName;
+        return "private/ngos/ngo_{$ngo_id}/register/agreement_{$agreement_id}/checlist_{$check_list_id}/" . $fileName;
     }
-    public function checkListCheck($file, $checklist_id)
+    public function checkFileWithList($file, $checklist_id)
     {
         // 1. Validate check exist
         $checklist = CheckList::find($checklist_id);
@@ -71,5 +84,52 @@ trait HelperTrait
         }
 
         return $found;
+    }
+    /**
+     * Converts a string to title case.
+     *
+     * @param string $model
+     * @return string
+     */
+    public static function getModelName(string $model): string
+    {
+        // Generate a unique key for the access token, e.g., access_token:<user_id>
+        $firstSlashPos = strpos($model, '\\');
+        $secondSlashPos = strpos($model, '\\', $firstSlashPos + 1);
+
+        // Get the part after the second backslash
+        $className = substr($model, $secondSlashPos + 1);
+        return $className;
+    }
+    public function ngoPermissions($ngo_id)
+    {
+        NgoPermission::create([
+            "view" => true,
+            "edit" => true,
+            "delete" => true,
+            "add" => true,
+            "ngo_id" => $ngo_id,
+            "permission" => PermissionEnum::dashboard->value,
+        ]);
+
+        $ngoPermission = NgoPermission::create([
+            "visible" => false,
+            "view" => true,
+            "edit" => true,
+            "delete" => true,
+            "add" => true,
+            "ngo_id" => $ngo_id,
+            "permission" => PermissionEnum::ngo->value,
+        ]);
+        foreach (SubPermissionEnum::NGO as $id => $role) {
+            NgoPermissionSub::factory()->create([
+                "edit" => true,
+                "delete" => true,
+                "add" => true,
+                "view" => true,
+                "ngo_permission_id" => $ngoPermission->id,
+                "sub_permission_id" => $id,
+            ]);
+        }
     }
 }

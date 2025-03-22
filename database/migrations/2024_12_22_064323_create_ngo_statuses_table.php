@@ -23,10 +23,8 @@ return new class extends Migration
                 ->onUpdate('cascade')
                 ->onDelete('no action');
             $table->string('comment', 128);
-            $table->foreignId('user_id')
-                ->constrained()
-                ->onUpdate('cascade')
-                ->onDelete('no action');
+            $table->string('userable_type');
+            $table->unsignedBigInteger('userable_id');
             $table->timestamps();
         });
     }

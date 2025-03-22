@@ -3,8 +3,11 @@
 namespace Database\Seeders;
 
 use App\Models\Country;
+use App\Models\CountryTrans;
 use App\Models\District;
+use App\Models\DistrictTrans;
 use App\Models\Province;
+use App\Models\ProvinceTrans;
 use App\Models\Translate;
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -1479,8 +1482,11 @@ class CountrySeeder extends Seeder
 
         foreach ($country as $name => $translations) {
             // Create the country record
-            $cnt = Country::factory()->create([
-                "name" => $name
+            $cnt = Country::factory()->create([]);
+            CountryTrans::create([
+                'value' => $name,
+                "language_name" => "en",
+                "country_id" => $cnt->id
             ]);
 
             // Loop through translations (e.g., fa, ps)
@@ -1490,8 +1496,12 @@ class CountrySeeder extends Seeder
                     foreach ($value as $provinceName => $provinceDetails) {
                         // Create a province for this country
                         $province = Province::factory()->create([
-                            "name" => $provinceName,
                             "country_id" => $cnt->id,  // Associate province with the created country
+                        ]);
+                        ProvinceTrans::create([
+                            'value' => $provinceName,
+                            "language_name" => "en",
+                            "province_id" => $province->id
                         ]);
 
                         // Loop through the province's translations and districts
@@ -1500,35 +1510,42 @@ class CountrySeeder extends Seeder
                                 foreach ($provinceValue as $districtName => $districtDetails) {
                                     // Create district for this province
                                     $district = District::factory()->create([
-                                        "name" => $districtName,
                                         "province_id" => $province->id,  // Associate district with the created province
+                                    ]);
+                                    DistrictTrans::create([
+                                        'value' => $districtName,
+                                        "language_name" => "en",
+                                        "district_id" => $district->id
                                     ]);
 
                                     // Translate district details (e.g., fa, ps)
                                     foreach ($districtDetails as $language => $translation) {
-                                        $this->Translate($translation, $language, $district->id, District::class);
+                                        DistrictTrans::create([
+                                            'value' => $translation,
+                                            "language_name" => $language,
+                                            "district_id" => $district->id
+                                        ]);
                                     }
                                 }
                             } else {
                                 // Translate province details (e.g., fa, ps)
-                                $this->Translate($provinceValue, $provinceKey, $province->id, Province::class);
+                                ProvinceTrans::create([
+                                    'value' => $provinceValue,
+                                    "language_name" => $provinceKey,
+                                    "province_id" => $province->id
+                                ]);
                             }
                         }
                     }
                 } else {
                     // Translate country details (e.g., fa, ps)
-                    $this->Translate($value, $key, $cnt->id, Country::class);
+                    CountryTrans::create([
+                        'value' => $value,
+                        "language_name" => $key,
+                        "country_id" => $cnt->id
+                    ]);
                 }
             }
         }
-    }
-    public function Translate($value, $language, $translable_id, $translable_type): void
-    {
-        Translate::factory()->create([
-            "value" => $value,
-            "language_name" => $language,
-            "translable_type" => $translable_type,
-            "translable_id" => $translable_id,
-        ]);
     }
 }

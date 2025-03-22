@@ -2,27 +2,51 @@
 
 namespace App\Http\Controllers\api\app\representor;
 
+use App\Models\Ngo;
+use App\Models\User;
+use App\Models\Document;
 use App\Models\Agreement;
 use App\Enums\LanguageEnum;
 use App\Models\Representer;
 use App\Models\RepresenterTran;
+use App\Enums\Type\TaskTypeEnum;
 use App\Models\AgreementDocument;
+use App\Traits\Helper\HelperTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\App;
 use App\Http\Controllers\Controller;
-use App\Traits\File\PendingFileTrait;
+use App\Models\AgreementRepresenter;
 use App\Enums\CheckList\CheckListEnum;
+use App\Enums\Type\StatusTypeEnum;
+use App\Repositories\Storage\StorageRepositoryInterface;
+use App\Repositories\Task\PendingTaskRepositoryInterface;
 use App\Http\Requests\app\representor\StoreRepresentorRequest;
 use App\Http\Requests\app\representor\UpdateRepresentorRequest;
+use App\Models\RepresentorDocuments;
+use App\Repositories\Representative\RepresentativeRepositoryInterface;
 
 class RepresentorController extends Controller
 {
-    use PendingFileTrait;
+    use HelperTrait;
+    protected $representativeRepository;
+    protected $pendingTaskRepository;
+    protected $storageRepository;
+    public function __construct(
+        RepresentativeRepositoryInterface $representativeRepository,
+        PendingTaskRepositoryInterface $pendingTaskRepository,
+        StorageRepositoryInterface $storageRepository
+    ) {
+        $this->representativeRepository = $representativeRepository;
+        $this->pendingTaskRepository = $pendingTaskRepository;
+        $this->storageRepository = $storageRepository;
+    }
+
     public function ngoRepresentor($id)
     {
         $representor = DB::table('representers as r')
             ->where('r.id', $id)
-            ->join('documents as d', 'd.id', 'r.document_id')
+            ->join('representor_documents as rd', 'rd.representor_id', 'r.id')
+            ->join('documents as d', 'd.id', 'rd.document_id')
             ->join('check_lists as cl', 'cl.id', 'd.check_list_id')
             ->joinSub(function ($query) {
                 $query->from('representer_trans as rt')
@@ -53,31 +77,37 @@ class RepresentorController extends Controller
             )
             ->first();
 
-        $result =  [
-            'id' => $representor->id,
-            'is_active' => (bool) $representor->is_active,
-            'repre_name_farsi' => $representor->repre_name_farsi,
-            'repre_name_english' => $representor->repre_name_english,
-            'repre_name_pashto' => $representor->repre_name_pashto,
-            'letter_of_intro' => [
-                "path" => $representor->path,
-                "document_id" => $representor->document_id,
-                "size" => $representor->size,
-                "type" => $representor->type,
-                "name" => $representor->actual_name,
-                "checklist_id" => $representor->check_list_id,
-            ],
-            'checklist' => [
-                "id" => $representor->check_list_id,
-                "acceptable_mimes" => $representor->acceptable_mimes,
-                "acceptable_extensions" => $representor->acceptable_extensions,
-                "file_size" => $representor->file_size,
-            ],
-        ];
+        if (!$representor)
+            return response()->json(
+                null,
+                200,
+                [],
+                JSON_UNESCAPED_UNICODE
+            );
 
 
         return response()->json(
-            $result,
+            [
+                'id' => $representor->id,
+                'is_active' => (bool) $representor->is_active,
+                'repre_name_farsi' => $representor->repre_name_farsi,
+                'repre_name_english' => $representor->repre_name_english,
+                'repre_name_pashto' => $representor->repre_name_pashto,
+                'letter_of_intro' => [
+                    "path" => $representor->path,
+                    "document_id" => $representor->document_id,
+                    "size" => $representor->size,
+                    "type" => $representor->type,
+                    "name" => $representor->actual_name,
+                    "checklist_id" => $representor->check_list_id,
+                ],
+                'checklist' => [
+                    "id" => $representor->check_list_id,
+                    "acceptable_mimes" => $representor->acceptable_mimes,
+                    "acceptable_extensions" => $representor->acceptable_extensions,
+                    "file_size" => $representor->file_size,
+                ],
+            ],
             200,
             [],
             JSON_UNESCAPED_UNICODE
@@ -87,19 +117,32 @@ class RepresentorController extends Controller
     public function ngoRepresentors($ngo_id)
     {
         $locale = App::getLocale();
+        $userModel = $this->getModelName(User::class);
+        $ngoModel = $this->getModelName(Ngo::class);
+
         $representor = DB::table('representers as r')
             ->where('r.ngo_id', $ngo_id)
-            ->leftJoin('agreements as a', function ($join) {
-                $join->on('a.representer_id', '=', 'r.id');
-            })
             ->join('representer_trans as rt', function ($join) use ($locale) {
                 $join->on('r.id', '=', 'rt.representer_id')
                     ->where('rt.language_name', $locale);
             })
-            ->join('users as u', 'r.user_id', '=', 'u.id')
+            ->join('agreement_representers as ar', 'ar.representer_id', '=', 'r.id')
+            ->join('agreements as a', function ($join) {
+                $join->on('a.id', '=', 'ar.agreement_id');
+            })
+            ->leftJoin('users as u', function ($join) use ($userModel) {
+                $join->on('r.userable_id', '=', 'u.id')
+                    ->where('r.userable_type', $userModel);
+            })
+            ->leftJoin('ngos as n', function ($join) use ($ngoModel) {
+                $join->on('r.userable_id', '=', 'n.id')
+                    ->where('r.userable_type', $ngoModel);
+            })
             ->select(
                 'r.id',
                 'r.is_active',
+                'r.userable_id',
+                'r.userable_type',
                 'r.created_at',
                 'rt.full_name',
                 'u.username',
@@ -124,55 +167,93 @@ class RepresentorController extends Controller
         $request->validated();
         $ngo_id = $request->ngo_id;
         $authUser = $request->user();
-        // 1. Get current agreement
-        $agreement = Agreement::where('ngo_id', $ngo_id)
-            ->where('end_date', null)
+        $ngo = DB::table('ngos as n')
+            ->where('n.id', $ngo_id)
+            ->join('ngo_statuses as ns', function ($join) {
+                $join->on('n.id', '=', 'ns.ngo_id')
+                    ->where('ns.is_active', true);
+            })->select(
+                'n.id',
+                'ns.status_type_id'
+            )
             ->first();
+        if (!$ngo) {
+            return response()->json([
+                'message' => __('app_translation.ngo_not_found'),
+            ], 200, [], JSON_UNESCAPED_UNICODE);
+        }
+        if (
+            $ngo->status_type_id == StatusTypeEnum::signed_register_form_submitted->value ||
+            $ngo->status_type_id == StatusTypeEnum::register_form_not_completed->value ||
+            $ngo->status_type_id == StatusTypeEnum::registration_expired->value ||
+            $ngo->status_type_id == StatusTypeEnum::registration_extended->value
+        ) {
+            return response()->json([
+                'message' => __('app_translation.unauthorized')
+            ], 401);
+        }
+        $agreement = null;
+        // 1. Get current agreement
+        if ($ngo->status_type_id == StatusTypeEnum::registered->value) {
+            $agreement = Agreement::where('ngo_id', $ngo_id)
+                ->latest('end_date')
+                ->first();
+        } else {
+            $agreement = Agreement::where('ngo_id', $ngo_id)
+                ->where('end_date', null)
+                ->first();
+        }
         if (!$agreement) {
             return response()->json([
-                'message' => __('app_translation.representor_add_error')
+                'message' => __('app_translation.agreement_not_exists')
             ], 409);
         }
         // 2. Transaction
         DB::beginTransaction();
         // 3. Store document
-        $result = $this->singleChecklistDBDocStore(
-            $request->letter_of_intro['pending_id'],
-            $agreement->id,
-            $ngo_id
+        $task = $this->pendingTaskRepository->pendingTaskExist(
+            $request->user(),
+            TaskTypeEnum::ngo_registeration->value,
+            $ngo->id
         );
-        if ($result['success'] == false) {
-            return $result['error'];
+        if (!$task) {
+            return response()->json([
+                'message' => __('app_translation.task_not_found')
+            ], 404);
         }
-        // To solve Multiple same checklist when new representor added.
-        $id = DB::table('agreement_documents as ad')
-            ->where('ad.agreement_id', $agreement->id)
-            ->join('documents as d', function ($join) {
-                $join->on('ad.document_id', '=', 'd.id')
-                    ->where('d.check_list_id', CheckListEnum::ngo_representor_letter->value);
-            })
-            ->select('ad.id')
-            ->first();
-        AgreementDocument::where('id', $id->id)->update(['document_id' => $result['document']->id]);
-
-        // 4. Update prevous representors status
-        Representer::where('ngo_id', $ngo_id)->update(['is_active' => false]);
-        // 5. Store representor
-        $representer = Representer::create([
-            'ngo_id' => $ngo_id,
-            'user_id' => $authUser->id,
-            'is_active' => true,
-            "document_id" => $result['document']->id
-        ]);
-        foreach (LanguageEnum::LANGUAGES as $code => $name) {
-            RepresenterTran::create([
-                'representer_id' => $representer->id,
-                'language_name' =>  $code,
-                'full_name' => $request["repre_name_{$name}"],
+        $representativeDocumentsId = [];
+        $this->storageRepository->documentStore($agreement->id, $ngo->id, $task->id, function ($documentData) use (&$representativeDocumentsId) {
+            $checklist_id = $documentData['check_list_id'];
+            $document = Document::create([
+                'actual_name' => $documentData['actual_name'],
+                'size' => $documentData['size'],
+                'path' => $documentData['path'],
+                'type' => $documentData['type'],
+                'check_list_id' => $checklist_id,
             ]);
-        }
-        $agreement->representer_id = $representer->id;
-        $agreement->save();
+            array_push($representativeDocumentsId, $document->id);
+            AgreementDocument::create([
+                'document_id' => $document->id,
+                'agreement_id' => $documentData['agreement_id'],
+            ]);
+        });
+
+        // Representative with agreement
+        $representer = $this->representativeRepository->storeRepresentative(
+            $request,
+            $ngo->id,
+            $agreement->id,
+            $representativeDocumentsId,
+            true,
+            $authUser->id,
+            $this->getModelName(get_class($authUser))
+        );
+
+        $this->pendingTaskRepository->destroyPendingTask(
+            $request->user(),
+            TaskTypeEnum::ngo_registeration->value,
+            $ngo->id
+        );
         DB::commit();
         $full_name = $request["repre_name_english"];
         $locale = App::getLocale();
@@ -187,10 +268,13 @@ class RepresentorController extends Controller
                 "full_name" => $full_name,
                 "is_active" => 1,
                 "saved_by" => $authUser->username,
+                "userable_type" => $representer->userable_type,
+                "userable_id" => $representer->userable_id,
                 "agreement_no" => $agreement->agreement_no,
                 "agreement_id" => $agreement->id,
                 "start_date" => $agreement->start_date,
                 "end_date" => $agreement->end_date,
+                "created_at" => $representer->created_at,
             ],
             'message' => __('app_translation.success'),
         ], 200, [], JSON_UNESCAPED_UNICODE);
@@ -201,13 +285,45 @@ class RepresentorController extends Controller
         $representer_id = $request->id;
         $ngo_id = $request->ngo_id;
         $authUser = $request->user();
-        // 1. Get current agreement
-        $agreement = Agreement::where('ngo_id', $ngo_id)
-            ->where('end_date', null)
+        $ngo = DB::table('ngos as n')
+            ->where('n.id', $ngo_id)
+            ->join('ngo_statuses as ns', function ($join) {
+                $join->on('n.id', '=', 'ns.ngo_id')
+                    ->where('ns.is_active', true);
+            })->select(
+                'n.id',
+                'ns.status_type_id'
+            )
             ->first();
+        if (!$ngo) {
+            return response()->json([
+                'message' => __('app_translation.ngo_not_found'),
+            ], 200, [], JSON_UNESCAPED_UNICODE);
+        }
+        if (
+            $ngo->status_type_id == StatusTypeEnum::signed_register_form_submitted->value ||
+            $ngo->status_type_id == StatusTypeEnum::register_form_not_completed->value ||
+            $ngo->status_type_id == StatusTypeEnum::registration_expired->value ||
+            $ngo->status_type_id == StatusTypeEnum::registration_extended->value
+        ) {
+            return response()->json([
+                'message' => __('app_translation.unauthorized')
+            ], 401);
+        }
+        $agreement = null;
+        // 1. Get current agreement
+        if ($ngo->status_type_id == StatusTypeEnum::registered->value) {
+            $agreement = Agreement::where('ngo_id', $ngo_id)
+                ->latest('end_date')
+                ->first();
+        } else {
+            $agreement = Agreement::where('ngo_id', $ngo_id)
+                ->where('end_date', null)
+                ->first();
+        }
         if (!$agreement) {
             return response()->json([
-                'message' => __('app_translation.representor_add_error')
+                'message' => __('app_translation.agreement_not_exists')
             ], 409);
         }
         $representer = Representer::find($representer_id);
@@ -219,33 +335,54 @@ class RepresentorController extends Controller
         // 1. Transaction
         DB::beginTransaction();
         // 2. Store document
-        if (isset($request->letter_of_intro['pending_id'])) {
+        $task = $this->pendingTaskRepository->pendingTaskExist(
+            $request->user(),
+            TaskTypeEnum::ngo_registeration->value,
+            null
+        );
+        if ($task) {
             // 3. New document is added
-            $result =  $this->singleChecklistDBDocStore(
-                $request->letter_of_intro['pending_id'],
-                $agreement->id,
-                $ngo_id
-            );
-            if ($result['success'] == false) {
-                return $result['error'];
+            $documentsId = [];
+            $documentsChecklists = [];
+            $this->storageRepository->documentStore($agreement->id, $ngo->id, $task->id, function ($documentData) use (&$documentsId, &$documentsChecklists, &$representer) {
+                $checklist_id = $documentData['check_list_id'];
+                $document = Document::create([
+                    'actual_name' => $documentData['actual_name'],
+                    'size' => $documentData['size'],
+                    'path' => $documentData['path'],
+                    'type' => $documentData['type'],
+                    'check_list_id' => $checklist_id,
+                ]);
+                array_push($documentsId, $document->id);
+                array_push($documentsChecklists, $checklist_id);
+                AgreementDocument::create([
+                    'document_id' => $document->id,
+                    'agreement_id' => $documentData['agreement_id'],
+                ]);
+            });
+            // 3.1 Get and delete previous document
+            $docsToDelete = DB::table('representor_documents as rd')
+                ->where('rd.representor_id', $representer->id)
+                ->join('documents as d', function ($join) use ($documentsChecklists, $documentsId) {
+                    $join->on('d.id', '=', 'rd.document_id')
+                        ->whereIn('d.check_list_id', $documentsChecklists)
+                        ->whereNotIn('d.id', $documentsId);
+                })
+                ->select(
+                    'd.id',
+                    'd.path',
+                )
+                ->get();
+            foreach ($docsToDelete as $document) {
+                // Perform some action with each document, for example, deleting it
+                $this->deleteFile($document->path);
+                DB::table('documents')->where('id', $document->id)->delete();
             }
-            $representer->document_id = $result['document']->id;
-            if ($request->is_active) {
-                $this->UpdateRepresenterChecklist($agreement->id, $result['document']->id);
-                Representer::where('ngo_id', $ngo_id)->update(['is_active' => false]);
-                $representer->is_active = true;
-                $agreement->representer_id = $representer->id;
-            } else {
-            }
-            $agreement->save();
+        }
+        if ($request->is_active) {
+            $representer->is_active = true;
         } else {
-            if ($request->is_active) {
-                // 3. Get Current Representer
-                $this->UpdateRepresenterChecklist($agreement->id, $representer->document_id);
-                Representer::where('ngo_id', $ngo_id)->update(['is_active' => false]);
-                $representer->is_active = true;
-                $agreement->representer_id = $representer->id;
-            }
+            $representer->is_active = false;
         }
         $trans = RepresenterTran::where('representer_id', $representer->id)
             ->select('id', 'language_name', 'full_name')
@@ -257,8 +394,8 @@ class RepresentorController extends Controller
                 $tran->save();
             }
         }
-        $agreement->save();
-        $representer->user_id = $authUser->id;
+        $representer->userable_type = $this->getModelName(get_class($authUser));
+        $representer->userable_id = $authUser->id;
         $representer->save();
         DB::commit();
         $full_name = $request["repre_name_english"];
@@ -275,22 +412,30 @@ class RepresentorController extends Controller
                 "agreement_no" => $agreement->agreement_no,
                 "is_active" => (bool) $representer->is_active,
                 "saved_by" => $authUser->username,
+                "userable_type" => $representer->userable_type,
+                "userable_id" => $representer->userable_id,
                 "start_date" => $agreement->start_date,
                 "end_date" => $agreement->end_date,
             ],
             'message' => __('app_translation.success'),
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
-    protected function UpdateRepresenterChecklist($agreement_id, $document_id)
+    public function ngoRepresentorsName($id)
     {
-        $id = DB::table('agreement_documents as ad')
-            ->where('ad.agreement_id', $agreement_id)
-            ->join('documents as d', function ($join) {
-                $join->on('ad.document_id', '=', 'd.id')
-                    ->where('d.check_list_id', CheckListEnum::ngo_representor_letter->value);
+        $locale = App::getLocale();
+        // Joining necessary tables to fetch the NGO data
+        $representers = DB::table('representers as r')
+            ->where('r.ngo_id', $id)
+            ->join('representer_trans as rt', function ($join) use ($locale) {
+                $join->on('r.id', '=', 'rt.representer_id')
+                    ->where('rt.language_name', $locale);
             })
-            ->select('ad.id')
-            ->first();
-        AgreementDocument::where('id', $id->id)->update(['document_id' => $document_id]);
+            ->select(
+                'r.id',
+                "rt.full_name as name"
+            )
+            ->get();
+
+        return response()->json($representers, 200, [], JSON_UNESCAPED_UNICODE);
     }
 }

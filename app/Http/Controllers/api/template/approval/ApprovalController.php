@@ -15,16 +15,16 @@ use Illuminate\Http\Request;
 use App\Models\ApprovalDocument;
 use App\Models\AgreementDocument;
 use App\Enums\Type\StatusTypeEnum;
+use App\Traits\Helper\HelperTrait;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Enums\Type\ApprovalTypeEnum;
 use App\Http\Controllers\Controller;
-use App\Enums\CheckList\CheckListEnum;
 use App\Repositories\Approval\ApprovalRepositoryInterface;
 use App\Repositories\Notification\NotificationRepositoryInterface;
 
 class ApprovalController extends Controller
 {
+    use HelperTrait;
     protected $approvalRepository;
     protected $notificationRepository;
 
@@ -97,7 +97,8 @@ class ApprovalController extends Controller
                     NgoStatus::where('ngo_id', $ngo->id)->update(['is_active' => false]);
                     NgoStatus::create([
                         'ngo_id' => $ngo->id,
-                        'user_id' => $request->user()->id,
+                        'userable_id' => $authUser->id,
+                        'userable_type' => $this->getModelName(get_class($authUser)),
                         "is_active" => true,
                         'status_type_id' => StatusTypeEnum::registered->value,
                         'comment' => 'Signed Register Form Approved',

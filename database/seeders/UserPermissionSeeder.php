@@ -39,7 +39,7 @@ class UserPermissionSeeder extends Seeder
             "user_id" => RoleEnum::super->value,
             "permission" => "ngo"
         ]);
-        $this->addNgoSubPermissions($userPermission);
+        $this->addNgoSubPermissions($userPermission, RoleEnum::super->value);
         UserPermission::factory()->create([
             "view" => true,
             "edit" => true,
@@ -143,7 +143,7 @@ class UserPermissionSeeder extends Seeder
             "user_id" => RoleEnum::admin->value,
             "permission" => "ngo"
         ]);
-        $this->addNgoSubPermissions($userPermission);
+        $this->addNgoSubPermissions($userPermission, RoleEnum::admin->value);
 
         UserPermission::factory()->create([
             "view" => true,
@@ -234,7 +234,7 @@ class UserPermissionSeeder extends Seeder
             "user_id" => RoleEnum::user->value,
             "permission" => "ngo"
         ]);
-        $this->addNgoSubPermissions($userPermission);
+        $this->addNgoSubPermissions($userPermission, RoleEnum::user->value);
         UserPermission::factory()->create([
             "view" => true,
             "edit" => true,
@@ -328,9 +328,12 @@ class UserPermissionSeeder extends Seeder
             ]);
         }
     }
-    public function addNgoSubPermissions($userPermission)
+    public function addNgoSubPermissions($userPermission, $user_role)
     {
         foreach (SubPermissionEnum::NGO as $id => $role) {
+            if ($id == SubPermissionEnum::ngo_update_account_password && $user_role != RoleEnum::super->value) {
+                continue;
+            }
             UserPermissionSub::factory()->create([
                 "edit" => true,
                 "delete" => true,

@@ -5,69 +5,51 @@ namespace App\Http\Controllers\api\template;
 use App\Models\Country;
 use App\Models\District;
 use App\Models\Province;
-use App\Models\Translate;
 use App\Enums\LanguageEnum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use App\Http\Controllers\Controller;
+use App\Models\CountryTrans;
+use App\Models\ProvinceTrans;
+use Illuminate\Support\Facades\DB;
 
 class LocationController extends Controller
 {
     public function countries()
     {
         $locale = App::getLocale();
-        $tr = [];
-        if ($locale == LanguageEnum::default->value) {
-            $tr = Country::select('id', 'name')->get();
-        } else {
-            $tr = Translate::where('translable_type', Country::class)
-                ->where('language_name', $locale)
-                ->select('translable_id as id', 'value as name')
-                ->get();
-        }
+        $tr = DB::table('country_trans as ct')
+            ->where('ct.language_name', $locale)
+            ->select('ct.country_id as id', 'ct.value as name')
+            ->get();
         return response()->json($tr);
     }
 
-    public function provinces(Request $request)
+    public function provinces($country_id)
     {
-        $request->validate([
-            'country_id' => 'required',
-        ]);
-        $country_id = $request->input('country_id');
-
         $locale = App::getLocale();
-        $tr = [];
-        if ($locale === LanguageEnum::default->value) {
-            $tr = Province::where('country_id', '=', $country_id)->select('id', 'name', 'country_id')->get();
-        } else {
-            $tr = Translate::join('provinces', 'translable_id', '=', 'provinces.id')
-                ->where('translable_type', '=', Province::class)
-                ->where('country_id', '=', $country_id)
-                ->where('language_name', '=', "fa")
-                ->select('translable_id as id', 'value as name')
-                ->get();
-        }
+        $tr = DB::table('provinces as p')
+            ->where('p.country_id', $country_id)
+            ->join('province_trans as pt', function ($join) use ($locale) {
+                $join->on('pt.province_id', '=', 'p.id')
+                    ->where('pt.language_name', $locale);
+            })
+            ->select('pt.province_id as id', 'pt.value as name')
+            ->get();
         return response()->json($tr);
     }
 
-    public function districts(Request $request)
+    public function districts($province_id)
     {
-        $request->validate([
-            'province_id' => 'required',
-        ]);
-        $province_id = $request->input('province_id');
         $locale = App::getLocale();
-        $tr = [];
-        if ($locale === LanguageEnum::default->value)
-            $tr =  District::select("name", 'id')->where('province_id', $province_id)->get();
-        else {
-            $tr = Translate::join('districts', 'translable_id', '=', 'districts.id')
-                ->where('translable_type', '=', District::class)
-                ->where('province_id', '=', $province_id)
-                ->where('language_name', '=', "fa")
-                ->select('translable_id as id', 'value as name')
-                ->get();
-        }
+        $tr = DB::table('districts as d')
+            ->where('d.province_id', $province_id)
+            ->join('district_trans as dt', function ($join) use ($locale) {
+                $join->on('dt.district_id', '=', 'd.id')
+                    ->where('dt.language_name', $locale);
+            })
+            ->select('dt.district_id as id', 'dt.value as name')
+            ->get();
         return response()->json($tr, 200, [], JSON_UNESCAPED_UNICODE);
     }
 }

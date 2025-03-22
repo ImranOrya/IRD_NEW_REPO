@@ -4,16 +4,16 @@ namespace App\Http\Controllers\api\auth;
 
 use App\Models\User;
 use App\Models\Email;
-use App\Models\ModelJob;
-use App\Models\Destination;
 use Illuminate\Http\Request;
 use App\Enums\Type\StatusTypeEnum;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\App;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Repositories\User\UserRepositoryInterface;
+use App\Http\Requests\template\user\UpdateProfilePasswordRequest;
 
 class UserAuthController extends Controller
 {
@@ -66,15 +66,15 @@ class UserAuthController extends Controller
                     "username" => $user->username,
                     'email' => $user->email,
                     "profile" => $user->profile,
-                    "status" => $user->status,
-                    "grant" => $user->grant_permission,
+                    "status" => (bool) $user->status,
+                    "grant" => (bool) $user->grant_permission,
                     "role" => ["role" => $user->role_id, "name" => $user->role_name],
                     'contact' => $user->contact,
                     "destination" => $user->destination,
                     "job" => $user->job,
                     "created_at" => $user->created_at,
                 ],
-                "permissions" => $this->userRepository->authFormattedPermissions($user->id),
+                "permissions" => $this->userRepository->userAuthFormattedPermissions($user->id),
             ],
             200,
             [],
@@ -99,10 +99,13 @@ class UserAuthController extends Controller
             // Get the auth user
             $user = $loggedIn['user'];
             if ($user->status == StatusTypeEnum::blocked) {
+                $this->userLoginLog($request, $user->id, User::class, 'UserBlock');
                 return response()->json([
                     'message' => __('app_translation.account_is_lock'),
                 ], 403, [], JSON_UNESCAPED_UNICODE);
             }
+            $this->userLoginLog($request, $user->id,  User::class, 'Success');
+
             $user = DB::table('users as u')
                 ->where('u.id', $user->id)
                 ->join('model_job_trans as mjt', function ($join) use ($locale) {
@@ -133,15 +136,15 @@ class UserAuthController extends Controller
             return response()->json(
                 [
                     "token" => $loggedIn['tokens']['access_token'],
-                    "permissions" => $this->userRepository->authFormattedPermissions($user->id),
+                    "permissions" => $this->userRepository->userAuthFormattedPermissions($user->id),
                     "user" => [
                         "id" => $user->id,
                         "full_name" => $user->full_name,
                         "username" => $user->username,
                         'email' => $credentials['email'],
                         "profile" => $user->profile,
-                        "status" => $user->status,
-                        "grant" => $user->grant_permission,
+                        "status" => (bool) $user->status,
+                        "grant" => (bool) $user->grant_permission,
                         "role" => ["role" => $user->role_id, "name" => $user->role_name],
                         'contact' => $user->contact,
                         "destination" => $user->destination,
@@ -167,6 +170,25 @@ class UserAuthController extends Controller
             'message' => __('app_translation.user_logged_out_success')
         ], 204, [], JSON_UNESCAPED_UNICODE);
     }
-    // HELPER
-    protected function userWithPermission($userId) {}
+    public function changePassword(UpdateProfilePasswordRequest $request)
+    {
+        $request->validated();
+        $authUser = $request->user();
+        DB::beginTransaction();
+        $request->validate([
+            "old_password" => ["required", "min:8", "max:45"],
+        ]);
+        if (!Hash::check($request->old_password, $authUser->password)) {
+            return response()->json([
+                'errors' => ['old_password' => [__('app_translation.incorrect_password')]],
+            ], 422, [], JSON_UNESCAPED_UNICODE);
+        } else {
+            $authUser->password = Hash::make($request->new_password);
+            $authUser->save();
+        }
+        DB::commit();
+        return response()->json([
+            'message' => __('app_translation.success'),
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
 }

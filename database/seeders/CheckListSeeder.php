@@ -73,8 +73,9 @@ class CheckListSeeder extends Seeder
         $checklist = CheckList::create([
             'id' => CheckListEnum::director_nid,
             'check_list_type_id' => CheckListTypeEnum::ngoRegister,
-            'acceptable_extensions' => "pdf,jpeg,jpg,png",
-            'acceptable_mimes' => "image/jpeg,image/png,image/jpg,application/pdf",
+            'acceptable_extensions' => "pdf,jpeg,png,jpg",
+            'acceptable_mimes' => "application/pdf,image/jpeg,image/png,image/jpg",
+            'accept' => ".pdf,.jpeg,.png,.jpg",
             'description' => "",
             'file_size' => 2048,
             'user_id' => RoleEnum::super,
@@ -98,8 +99,9 @@ class CheckListSeeder extends Seeder
         $checklist = CheckList::create([
             "id" => CheckListEnum::director_work_permit,
             'check_list_type_id' => CheckListTypeEnum::ngoRegister,
-            'acceptable_extensions' => "pdf,jpeg,jpg,png",
-            'acceptable_mimes' => "image/jpeg,image/png,image/jpg,application/pdf",
+            'acceptable_extensions' => "pdf,jpeg,png,jpg",
+            'acceptable_mimes' => "application/pdf,image/jpeg,image/png,image/jpg",
+            'accept' => ".pdf,.jpeg,.png,.jpg",
             'description' => "",
             'file_size' => 2048,
             'user_id' => RoleEnum::super,
@@ -123,8 +125,9 @@ class CheckListSeeder extends Seeder
         $checklist = CheckList::create([
             'id' => CheckListEnum::ministry_of_economy_work_permit,
             'check_list_type_id' => CheckListTypeEnum::ngoRegister,
-            'acceptable_extensions' => "pdf,jpeg,jpg,png",
-            'acceptable_mimes' => "image/jpeg,image/png,image/jpg,application/pdf",
+            'acceptable_extensions' => "pdf,jpeg,png,jpg",
+            'acceptable_mimes' => "application/pdf,image/jpeg,image/png,image/jpg",
+            'accept' => ".pdf,.jpeg,.png,.jpg",
             'description' => "",
             'file_size' => 2048,
             'user_id' => RoleEnum::super,
@@ -150,8 +153,9 @@ class CheckListSeeder extends Seeder
         $checklist = CheckList::create([
             'id' => CheckListEnum::articles_of_association,
             'check_list_type_id' => CheckListTypeEnum::ngoRegister,
-            'acceptable_extensions' => "pdf,jpeg,jpg,png",
-            'acceptable_mimes' => "image/jpeg,image/png,image/jpg,application/pdf",
+            'acceptable_extensions' => "pdf,jpeg,png,jpg",
+            'acceptable_mimes' => "application/pdf,image/jpeg,image/png,image/jpg",
+            'accept' => ".pdf,.jpeg,.png,.jpg",
             'description' => "",
             'file_size' => 2048,
             'user_id' => RoleEnum::super,
@@ -175,15 +179,16 @@ class CheckListSeeder extends Seeder
         $checklist = CheckList::create([
             "id" => CheckListEnum::ngo_representor_letter,
             'check_list_type_id' => CheckListTypeEnum::ngoRegister,
-            'acceptable_extensions' => "pdf,jpeg,jpg,png",
-            'acceptable_mimes' => "image/jpeg,image/png,image/jpg,application/pdf",
+            'acceptable_extensions' => "pdf,jpeg,png,jpg",
+            'acceptable_mimes' => "application/pdf,image/jpeg,image/png,image/jpg",
+            'accept' => ".pdf,.jpeg,.png,.jpg",
             'description' => "",
             'file_size' => 2048,
             'user_id' => RoleEnum::super,
         ]);
         CheckListTrans::create([
             'check_list_id' => $checklist->id,
-            'value' => "Representor introducation letter",
+            'value' => "Representative introduction letter",
             'language_name' => LanguageEnum::default,
         ]);
         CheckListTrans::create([
@@ -199,8 +204,9 @@ class CheckListSeeder extends Seeder
         //5.
         $checklist = CheckList::create([
             'check_list_type_id' => CheckListTypeEnum::ngoRegister,
-            'acceptable_extensions' => "pdf,jpeg,jpg,png",
-            'acceptable_mimes' => "image/jpeg,image/png,image/jpg,application/pdf",
+            'acceptable_extensions' => "pdf,jpeg,png,jpg",
+            'acceptable_mimes' => "application/pdf,image/jpeg,image/png,image/jpg",
+            'accept' => ".pdf,.jpeg,.png,.jpg",
             'description' => "",
             'file_size' => 2048,
             'user_id' => RoleEnum::super,
@@ -224,8 +230,9 @@ class CheckListSeeder extends Seeder
         $checklist = CheckList::create([
             'id' => CheckListEnum::ngo_register_form_en,
             'check_list_type_id' => CheckListTypeEnum::ngoRegister,
-            'acceptable_extensions' => "pdf,jpeg,jpg,png",
-            'acceptable_mimes' => "image/jpeg,image/png,image/jpg,application/pdf",
+            'acceptable_extensions' => "pdf,jpeg,png,jpg",
+            'acceptable_mimes' => "application/pdf,image/jpeg,image/png,image/jpg",
+            'accept' => ".pdf,.jpeg,.png,.jpg",
             'description' => "",
             'file_size' => 4048,
             'user_id' => RoleEnum::super,
@@ -249,8 +256,9 @@ class CheckListSeeder extends Seeder
         $checklist = CheckList::create([
             'id' => CheckListEnum::ngo_register_form_ps,
             'check_list_type_id' => CheckListTypeEnum::ngoRegister,
-            'acceptable_extensions' => "pdf,jpeg,jpg,png",
-            'acceptable_mimes' => "image/jpeg,image/png,image/jpg,application/pdf",
+            'acceptable_extensions' => "pdf,jpeg,png,jpg",
+            'acceptable_mimes' => "application/pdf,image/jpeg,image/png,image/jpg",
+            'accept' => ".pdf,.jpeg,.png,.jpg",
             'description' => "",
             'file_size' => 4048,
             'user_id' => RoleEnum::super,
@@ -274,8 +282,9 @@ class CheckListSeeder extends Seeder
         $checklist = CheckList::create([
             'id' => CheckListEnum::ngo_register_form_fa,
             'check_list_type_id' => CheckListTypeEnum::ngoRegister,
-            'acceptable_extensions' => "pdf,jpeg,jpg,png",
-            'acceptable_mimes' => "image/jpeg,image/png,image/jpg,application/pdf",
+            'acceptable_extensions' => "pdf,jpeg,png,jpg",
+            'acceptable_mimes' => "application/pdf,image/jpeg,image/png,image/jpg",
+            'accept' => ".pdf,.jpeg,.png,.jpg",
             'description' => "",
             'file_size' => 4048,
             'user_id' => RoleEnum::super,
@@ -301,8 +310,9 @@ class CheckListSeeder extends Seeder
         // 1.
         $checklist = CheckList::create([
             'check_list_type_id' => CheckListTypeEnum::projectRegister,
-            'acceptable_extensions' => "pdf,jpeg,jpg,png",
-            'acceptable_mimes' => "image/jpeg,image/png,image/jpg,application/pdf",
+            'acceptable_extensions' => "pdf,jpeg,png,jpg",
+            'acceptable_mimes' => "application/pdf,image/jpeg,image/png,image/jpg",
+            'accept' => ".pdf,.jpeg,.png,.jpg",
             'description' => "",
             'file_size' => 2048,
             'user_id' => RoleEnum::super,
@@ -325,8 +335,9 @@ class CheckListSeeder extends Seeder
         // 2.
         $checklist = CheckList::create([
             'check_list_type_id' => CheckListTypeEnum::projectRegister,
-            'acceptable_extensions' => "pdf,jpeg,jpg,png",
-            'acceptable_mimes' => "image/jpeg,image/png,image/jpg,application/pdf",
+            'acceptable_extensions' => "pdf,jpeg,png,jpg",
+            'acceptable_mimes' => "application/pdf,image/jpeg,image/png,image/jpg",
+            'accept' => ".pdf,.jpeg,.png,.jpg",
             'description' => "",
             'file_size' => 2048,
             'user_id' => RoleEnum::super,
@@ -349,8 +360,9 @@ class CheckListSeeder extends Seeder
         // 3.
         $checklist = CheckList::create([
             'check_list_type_id' => CheckListTypeEnum::projectRegister,
-            'acceptable_extensions' => "pdf,jpeg,jpg,png",
-            'acceptable_mimes' => "image/jpeg,image/png,image/jpg,application/pdf",
+            'acceptable_extensions' => "pdf,jpeg,png,jpg",
+            'acceptable_mimes' => "application/pdf,image/jpeg,image/png,image/jpg",
+            'accept' => ".pdf,.jpeg,.png,.jpg",
             'description' => "",
             'file_size' => 2048,
             'user_id' => RoleEnum::super,
@@ -373,8 +385,9 @@ class CheckListSeeder extends Seeder
         // 4.
         $checklist = CheckList::create([
             'check_list_type_id' => CheckListTypeEnum::projectRegister,
-            'acceptable_extensions' => "pdf,jpeg,jpg,png",
-            'acceptable_mimes' => "image/jpeg,image/png,image/jpg,application/pdf",
+            'acceptable_extensions' => "pdf,jpeg,png,jpg",
+            'acceptable_mimes' => "application/pdf,image/jpeg,image/png,image/jpg",
+            'accept' => ".pdf,.jpeg,.png,.jpg",
             'description' => "",
             'file_size' => 2048,
             'user_id' => RoleEnum::super,
@@ -397,8 +410,9 @@ class CheckListSeeder extends Seeder
         // 5.
         $checklist = CheckList::create([
             'check_list_type_id' => CheckListTypeEnum::projectRegister,
-            'acceptable_extensions' => "pdf,ppt,pptx",
-            'acceptable_mimes' => "application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-powerpoint,application/pdf",
+            'acceptable_extensions' => "pdf,jpeg,png,jpg",
+            'acceptable_mimes' => "application/pdf,image/jpeg,image/png,image/jpg",
+            'accept' => ".pdf,.jpeg,.png,.jpg",
             'description' => "",
             'file_size' => 2048,
             'user_id' => RoleEnum::super,
@@ -421,8 +435,9 @@ class CheckListSeeder extends Seeder
         // 6.
         $checklist = CheckList::create([
             'check_list_type_id' => CheckListTypeEnum::projectRegister,
-            'acceptable_extensions' => "pdf,jpeg,jpg,png",
-            'acceptable_mimes' => "image/jpeg,image/png,image/jpg,application/pdf",
+            'acceptable_extensions' => "pdf,jpeg,png,jpg",
+            'acceptable_mimes' => "application/pdf,image/jpeg,image/png,image/jpg",
+            'accept' => ".pdf,.jpeg,.png,.jpg",
             'description' => "",
             'file_size' => 4048,
             'user_id' => RoleEnum::super,
@@ -445,8 +460,9 @@ class CheckListSeeder extends Seeder
         // 7.
         $checklist = CheckList::create([
             'check_list_type_id' => CheckListTypeEnum::projectRegister,
-            'acceptable_extensions' => "pdf,jpeg,jpg,png",
-            'acceptable_mimes' => "image/jpeg,image/png,image/jpg,application/pdf",
+            'acceptable_extensions' => "pdf,jpeg,png,jpg",
+            'acceptable_mimes' => "application/pdf,image/jpeg,image/png,image/jpg",
+            'accept' => ".pdf,.jpeg,.png,.jpg",
             'description' => "",
             'file_size' => 4048,
             'user_id' => RoleEnum::super,
@@ -469,8 +485,9 @@ class CheckListSeeder extends Seeder
         // 8.
         $checklist = CheckList::create([
             'check_list_type_id' => CheckListTypeEnum::projectRegister,
-            'acceptable_extensions' => "pdf,jpeg,jpg,png",
-            'acceptable_mimes' => "image/jpeg,image/png,image/jpg,application/pdf",
+            'acceptable_extensions' => "pdf,jpeg,png,jpg",
+            'acceptable_mimes' => "application/pdf,image/jpeg,image/png,image/jpg",
+            'accept' => ".pdf,.jpeg,.png,.jpg",
             'description' => "",
             'file_size' => 4048,
             'user_id' => RoleEnum::super,

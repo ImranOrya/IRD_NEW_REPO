@@ -19,6 +19,7 @@ return new class extends Migration
                 ->onDelete('no action');
             $table->string('acceptable_extensions');
             $table->string('acceptable_mimes')->comment('Stores frontend validation value');
+            $table->string('accept')->comment('Frontend input accept parameter');
             $table->boolean('active')->default(true)->comment("Used when the checklist is no longer needed");
             $table->integer('file_size')->default('512')->comment('file size in KB');
             $table->string('description', 128)->nullable();

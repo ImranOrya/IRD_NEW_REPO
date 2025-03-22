@@ -6,7 +6,7 @@ use App\Enums\SubPermissionEnum;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\api\template\PermissionController;
 
-Route::prefix('v1')->middleware(['api.key', "doubleAuthorized:" . 'user:api,ngo:api'])->group(function () {
+Route::prefix('v1')->middleware(['api.key', "multiAuthorized:" . 'user:api,ngo:api'])->group(function () {
     Route::get('/role-permissions/{id}', [PermissionController::class, "rolePermissions"]);
 });
 

@@ -84,74 +84,133 @@ class DirectorController extends Controller
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 
-    public function ngoDirector(Request $request, $id)
+    public function ngoDirectorsName($id)
     {
         $locale = App::getLocale();
         // Joining necessary tables to fetch the NGO data
-        $director = Director::join('contacts', 'contact_id', '=', 'contacts.id')
-            ->leftJoin('emails', 'email_id', '=', 'emails.id')
-            ->leftJoin('addresses', 'address_id', '=', 'addresses.id')
-            ->leftjoin('nid_type_trans', 'nid_type_trans.nid_type_id', 'directors.nid_type_id')
-            ->leftjoin('genders', 'genders.id', 'directors.gender_id')
-            ->where('directors.id', $id)
-            ->where('directors.is_active', 1)
-            ->where('nid_type_trans.language_name', $locale)
-
+        $director = DB::table('directors as d')
+            ->where('d.ngo_id', $id)
+            ->join('director_trans as dt', function ($join) use ($locale) {
+                $join->on('dt.director_id', '=', 'd.id')
+                    ->where("dt.language_name", $locale);
+            })
             ->select(
-                'directors.id',
-                'directors.is_active',
-                'emails.value as email',
-                'contacts.value as contact',
-                'directors.contact_id',
-                'nid_type_trans.value as nid_type',
-                'directors.nid_type_id',
-                "genders.name_{$locale} as gender",
-                'gender_id',
-                'directors.country_id',
-                'nid_no',
-                'address_id',
-                'province_id',
-                'district_id',
+                'd.id',
+                'd.is_active',
+                'd.country_id',
+                DB::raw("CONCAT(dt.name, ' ', dt.last_name) as name")
+            )
+            ->get();
+
+        return response()->json($director, 200, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    public function ngoDirector($id)
+    {
+        $locale = App::getLocale();
+        $director = DB::table('directors as d')
+            ->where('d.ngo_id', $id)
+            ->where('d.is_active', true)
+            ->join('director_trans as dirt', 'dirt.director_id', '=', 'd.id')
+            ->join('country_trans as ct', function ($join) use ($locale) {
+                $join->on('ct.country_id', '=', 'd.country_id')
+                    ->where('ct.language_name', $locale);
+            })
+            ->join('contacts as c', 'c.id', '=', 'd.contact_id')
+            ->join('emails as e', 'e.id', '=', 'd.email_id')
+            ->join('addresses as a', 'a.id', '=', 'd.address_id')
+            ->join('address_trans as at', 'at.address_id', '=', 'a.id')
+            ->join('district_trans as dt', function ($join) use ($locale) {
+                $join->on('dt.district_id', '=', 'a.district_id')
+                    ->where('dt.language_name', $locale);
+            })
+            ->join('province_trans as pt', function ($join) use ($locale) {
+                $join->on('pt.province_id', '=', 'a.province_id')
+                    ->where('pt.language_name', $locale);
+            })
+            ->join('nid_type_trans as ntt', function ($join) use ($locale) {
+                $join->on('ntt.nid_type_id', '=', 'd.nid_type_id')
+                    ->where('ntt.language_name', $locale);
+            })
+            ->join('genders as g', 'g.id', '=', 'd.gender_id')
+            ->select(
+                'd.id',
+                'g.id as gender_id',
+                'g.name_en',
+                'g.name_ps',
+                'g.name_fa',
+                'd.is_active',
+                'd.nid_no',
+                'd.nid_type_id',
+                'pt.value as province',
+                'pt.province_id',
+                'ntt.value as nid_type',
+                'c.value as contact',
+                'e.value as email',
+                'dt.value as district',
+                'dt.district_id',
+                'ct.country_id',
+                'ct.value as country',
+                // Aggregating the name by conditional filtering for each language
+                DB::raw("MAX(CASE WHEN dirt.language_name = 'ps' THEN dirt.name END) as name_pashto"),
+                DB::raw("MAX(CASE WHEN dirt.language_name = 'fa' THEN dirt.name END) as name_farsi"),
+                DB::raw("MAX(CASE WHEN dirt.language_name = 'en' THEN dirt.name END) as name_english"),
+                DB::raw("MAX(CASE WHEN dirt.language_name = 'ps' THEN dirt.last_name END) as surname_pashto"),
+                DB::raw("MAX(CASE WHEN dirt.language_name = 'fa' THEN dirt.last_name END) as surname_farsi"),
+                DB::raw("MAX(CASE WHEN dirt.language_name = 'en' THEN dirt.last_name END) as surname_english"),
+                DB::raw("MAX(CASE WHEN at.language_name = 'ps' THEN at.area END) as area_pashto"),
+                DB::raw("MAX(CASE WHEN at.language_name = 'fa' THEN at.area END) as area_farsi"),
+                DB::raw("MAX(CASE WHEN at.language_name = 'en' THEN at.area END) as area_english")
+            )
+            ->groupBy(
+                'd.id',
+                'g.id',
+                'g.name_en',
+                'g.name_ps',
+                'g.name_fa',
+                'd.is_active',
+                'd.nid_no',
+                'd.nid_type_id',
+                'pt.value',
+                'pt.province_id',
+                'ntt.value',
+                'c.value',
+                'e.value',
+                'dt.value',
+                'dt.district_id',
+                'ct.country_id',
+                'ct.value',
             )
             ->first();
-
-        // Handle NGO not found
-        if (!$director) {
-            return response()->json([
-                'message' => __('app_translation.not_found'),
-            ], 404);
+        $gender = $director->name_en;
+        if ($locale == "fa") {
+            $gender = $director->name_fa;
+        } else if ($locale == "ps") {
+            $gender = $director->name_ps;
         }
-
-
-        // Fetching translations using a separate query
-        $translations = $this->directorNameTrans($director->id);
-        $areaTrans = $this->getAddressAreaTran($director->address_id);
-        $address = $this->getCompleteAddress($director->address_id, $locale);
-
-        $data = [
+        $data =  [
             'id' => $director->id,
-            'is_active' => $director->is_active === 1 ? true : false,
-            'name_english' => $translations['en']->name ?? '',
-            'name_pashto' => $translations['ps']->name ?? '',
-            'name_farsi' => $translations['fa']->name ?? '',
-            'surname_english' => $translations['en']->last_name ?? '',
-            'surname_pashto' => $translations['ps']->last_name ?? '',
-            'surname_farsi' => $translations['fa']->last_name ?? '',
-            'nationality' => ['name' => $this->getCountry($director->country_id, $locale), 'id' => $director->country_id],
+            'is_active' => $director->is_active == true,
+            'name_english' => $director->name_english,
+            'name_pashto' => $director->name_pashto,
+            'name_farsi' => $director->name_farsi,
+            'surname_english' => $director->surname_english,
+            'surname_pashto' => $director->surname_pashto,
+            'surname_farsi' => $director->surname_farsi,
+            'nationality' => ['name' => $director->country, 'id' => $director->country_id],
             'contact' => $director->contact,
             'email' => $director->email,
-            'gender' => ['name' => $director->gender, 'id' => $director->gender_id],
+            'gender' => ['name' => $gender, 'id' => $director->gender_id],
             'nid' => $director->nid_no,
             'identity_type' => ['name' => $director->nid_type, 'id' => $director->nid_type_id],
-            'province' => ['name' => $address['province'], 'id' => $director->province_id],
-            'district' => ['name' => $address['district'], 'id' => $director->district_id],
-            'area_english' => $areaTrans['en']->area ?? '',
-            'area_pashto' => $areaTrans['ps']->area ?? '',
-            'area_farsi' => $areaTrans['fa']->area ?? '',
+            'province' => ['name' => $director->province, 'id' => $director->province_id],
+            'district' => ['name' => $director->district, 'id' => $director->district_id],
+            'area_english' => $director->area_english,
+            'area_pashto' => $director->area_pashto,
+            'area_farsi' => $director->area_farsi,
         ];
 
         return response()->json([
-            'message' => __('app_translation.success'),
             'director' => $data,
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }

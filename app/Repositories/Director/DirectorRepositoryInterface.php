@@ -15,5 +15,5 @@ interface DirectorRepositoryInterface
      * @param boolean is_active
      * @return App\Models\Director
      */
-    public function storeNgoDirector($validatedData, $ngo_id, $agreement_id, $DocumentsId, $is_active);
+    public function storeNgoDirector($validatedData, $ngo_id, $agreement_id, $DocumentsId, $is_active, $userable_id, $userable_type);
 }

@@ -9,5 +9,5 @@ Route::prefix('v1')->middleware(['api.key'])->group(function () {
 
 Route::prefix('v1')->middleware(['api.key', "authorized:" . 'donor:api'])->group(function () {
     Route::get('/auth-donor', [DonorAuthController::class, 'authDonor']);
-    Route::get('/logout-donor', [DonorAuthController::class, 'logout']);
+    Route::post('/logout-donor', [DonorAuthController::class, 'logout']);
 });
