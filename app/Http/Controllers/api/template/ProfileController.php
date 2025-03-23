@@ -229,7 +229,7 @@ class ProfileController extends Controller
     {
         $locale = App::getLocale();
 
-        $data = $this->ngoRepository->startRegisterFormInfo($ngo_id, $locale);
+        $data = $this->ngoRepository->ngoProfileInfo($ngo_id, $locale);
         if (!$data) {
             return response()->json([
                 'message' => __('app_translation.ngo_not_found'),

@@ -134,6 +134,15 @@ interface NgoRepositoryInterface
      */
     public function startRegisterFormInfo($ngo_id, $locale);
     /**
+     * Retrieve NGO data when registered by IRD.
+     * 
+     *
+     * @param string $ngo_id
+     * @param string $locale
+     * @return array
+     */
+    public function ngoProfileInfo($ngo_id, $locale);
+    /**
      * Retrieve NGO data when registeration is completed.
      * 
      *

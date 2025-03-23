@@ -1,7 +1,6 @@
 
 <?php
 
-use App\Enums\PermissionEnum;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\api\app\ngo\NgoTypeController;
 

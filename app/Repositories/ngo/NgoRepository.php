@@ -11,55 +11,75 @@ class NgoRepository implements NgoRepositoryInterface
 {
     use AddressTrait, NgoTrait;
 
-    // public function startExtendForm($query, $ngo_id, $locale)
-    // {
-    //     $this->typeTransJoin($query, $locale)
-    //         ->emailJoin($query)
-    //         ->contactJoin($query)
-    //         ->addressJoin($query);
-    //     $ngo = $query->select(
-    //         'n.abbr',
-    //         'n.ngo_type_id',
-    //         'ntt.value as type_name',
-    //         'n.registration_no',
-    //         'n.moe_registration_no',
-    //         'n.place_of_establishment',
-    //         'n.date_of_establishment',
-    //         'a.province_id',
-    //         'a.district_id',
-    //         'a.id as address_id',
-    //         'e.value as email',
-    //         'c.value as contact',
-    //     )->first();
+    public function ngoProfileInfo($ngo_id, $locale)
+    {
+        $ngo = $this->generalQuery($ngo_id, $locale)
+            ->join('ngo_statuses as ns', function ($join) {
+                $join->on('ns.ngo_id', '=', 'n.id')
+                    ->where('ns.is_active', true);
+            })
+            ->join('status_type_trans as stt', function ($join) use ($locale) {
+                $join->on('stt.status_type_id', '=', 'ns.status_type_id')
+                    ->where('stt.language_name', $locale);
+            })
+            ->select(
+                'n.id',
+                'n.registration_no',
+                'n.abbr',
+                'n.ngo_type_id',
+                'ntt.value as ngo_type',
+                'c.value as contact',
+                'e.value as email',
+                'dt.value as district',
+                'dt.district_id',
+                'pt.value as province',
+                'pt.province_id',
+                'ns.status_type_id',
+                'stt.name as status_type',
+                // Aggregating the name by conditional filtering for each language
+                DB::raw("MAX(CASE WHEN nt.language_name = 'ps' THEN nt.name END) as name_pashto"),
+                DB::raw("MAX(CASE WHEN nt.language_name = 'fa' THEN nt.name END) as name_farsi"),
+                DB::raw("MAX(CASE WHEN nt.language_name = 'en' THEN nt.name END) as name_english"),
+                DB::raw("MAX(CASE WHEN at.language_name = 'ps' THEN at.area END) as area_pashto"),
+                DB::raw("MAX(CASE WHEN at.language_name = 'fa' THEN at.area END) as area_farsi"),
+                DB::raw("MAX(CASE WHEN at.language_name = 'en' THEN at.area END) as area_english")
+            )
+            ->groupBy(
+                'n.id',
+                'n.registration_no',
+                'n.abbr',
+                'n.ngo_type_id',
+                'ntt.value',
+                'c.value',
+                'e.value',
+                'dt.value',
+                'pt.value',
+                'dt.district_id',
+                'pt.province_id',
+                'ns.status_type_id',
+                'stt.name',
+            )
+            ->first();
 
-    //     if (!$ngo)
-    //         return null;
-
-    //     // Fetching translations using a separate query
-    //     $translations = $this->ngoNameTrans($ngo_id);
-    //     $areaTrans = $this->getAddressAreaTran($ngo->address_id);
-    //     $address = $this->getAddressTrans(
-    //         $ngo->province_id,
-    //         $ngo->district_id,
-    //         $locale
-    //     );
-
-    //     return [
-    //         'name_english' => $translations['en']->name ?? null,
-    //         'name_pashto' => $translations['ps']->name ?? null,
-    //         'name_farsi' => $translations['fa']->name ?? null,
-    //         'abbr' => $ngo->abbr,
-    //         'type' => ['name' => $ngo->type_name, 'id' => $ngo->ngo_type_id],
-    //         'contact' => $ngo->contact,
-    //         'email' =>   $ngo->email,
-    //         'registration_no' => $ngo->registration_no,
-    //         'province' => $address['province'],
-    //         'district' => $address['district'],
-    //         'area_english' => $areaTrans['en']->area ?? '',
-    //         'area_pashto' => $areaTrans['ps']->area ?? '',
-    //         'area_farsi' => $areaTrans['fa']->area ?? '',
-    //     ];
-    // }
+        return [
+            "id" => $ngo->id,
+            "abbr" => $ngo->abbr,
+            "name_english" => $ngo->name_english,
+            "name_farsi" => $ngo->name_farsi,
+            "name_pashto" => $ngo->name_pashto,
+            "type" => ['id' => $ngo->ngo_type_id, 'name' => $ngo->ngo_type],
+            "contact" => $ngo->contact,
+            "email" => $ngo->email,
+            "registration_no" => $ngo->registration_no,
+            "province" => ["id" => $ngo->province_id, "name" => $ngo->province],
+            "district" => ["id" => $ngo->district_id, "name" => $ngo->district],
+            "area_english" => $ngo->area_english,
+            "area_pashto" => $ngo->area_pashto,
+            "area_farsi" => $ngo->area_farsi,
+            "status_type_id" => $ngo->status_type_id,
+            "status_type" => $ngo->status_type,
+        ];
+    }
     public function startRegisterFormInfo($ngo_id, $locale)
     {
         $ngo = $this->generalQuery($ngo_id, $locale)
