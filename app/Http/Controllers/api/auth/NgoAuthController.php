@@ -10,21 +10,15 @@ use App\Models\Address;
 use App\Models\Contact;
 use App\Models\NgoTran;
 use App\Models\NgoStatus;
-use App\Enums\LanguageEnum;
-use App\Models\AddressTran;
+use Sway\Utils\StringUtils;
 use Illuminate\Http\Request;
 use App\Enums\Type\StatusTypeEnum;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Repositories\User\UserRepositoryInterface;
-use App\Http\Requests\app\ngo\NgoInfoUpdateRequest;
-use App\Http\Requests\Auth\ngo\NgoProfileUpdateRequest;
-use App\Http\Requests\template\user\UpdateUserPasswordRequest;
 use App\Http\Requests\template\user\UpdateProfilePasswordRequest;
 
 class NgoAuthController extends Controller
@@ -145,6 +139,8 @@ class NgoAuthController extends Controller
                     "r.name as role_name"
                 )->first();
 
+
+            $this->storeUserLog($request, $authNgo->id, StringUtils::getModelName(Ngo::class), "Login");
 
             return response()->json(
                 [

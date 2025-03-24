@@ -63,13 +63,16 @@ class NgoPdfController extends Controller
         $languages = ['en', 'ps', 'fa'];
         $pdfFiles = [];
 
+
         foreach ($languages as $lang) {
             $mpdf = $this->generatePdf();
+
             $this->setWatermark($mpdf);
             $data = $this->loadNgoData($lang, $id);
-
+            // return "ngo.registeration.{$lang}.registeration";
             // Generate PDF content
             $this->pdfFilePart($mpdf, "ngo.registeration.{$lang}.registeration", $data);
+            // $this->pdfFilePart($mpdf, "ngo.registeration.{$lang}.registeration", $data);
             $mpdf->SetProtection(['print']);
 
             // Store the PDF temporarily
@@ -105,8 +108,10 @@ class NgoPdfController extends Controller
 
         return response()->download($zipFile)->deleteFileAfterSend(true);
     }
-    protected function loadNgoData($locale, $id)
+    protected function loadNgoData($locale = 'en', $id)
     {
+        $id = 1;
+        $locale = 'en';
         $ngo = DB::table('ngos as n')
             ->where('n.id', $id)
             ->join('ngo_trans as nt', function ($join) use ($locale) {
@@ -211,21 +216,9 @@ class NgoPdfController extends Controller
             'ngo_name' =>  $ngo->name,
             'abbr' => $ngo->abbr,
             'contact' => $ngo->contact,
-            'address' =>                      [
-                'complete_address' => $ngo->area . ',' . $ngo->district . ',' . $ngo->province . ',' . $ngo->country,
-                'area' => $ngo->area,
-                'district' => $ngo->district,
-                'province' => $ngo->province,
-                'country' => $ngo->country
-            ],
+            'address' => $ngo->area . ',' . $ngo->district . ',' . $ngo->province . ',' . $ngo->country,
             'director' => $director->name . " " . $director->last_name,
-            'director_address' => [
-                'complete_address' => $director->area . ',' . $director->district . ',' . $director->province . ',' . $director->country,
-                'area' => $director->area,
-                'district' => $director->district,
-                'province' => $director->province,
-                'country' => $director->country
-            ],
+            'director_address' =>  $director->area . ',' . $director->district . ',' . $director->province . ',' . $director->country,
             'email' => $ngo->email,
             'establishment_date' => $ngo->date_of_establishment,
             'place_of_establishment' => $ngo->country,
@@ -236,6 +229,8 @@ class NgoPdfController extends Controller
             'vission' => $ngo->vision,
             'ird_director' => $irdDirector->name,
         ];
+
+
         return $data;
     }
 }

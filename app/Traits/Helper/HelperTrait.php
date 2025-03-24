@@ -4,11 +4,14 @@ namespace App\Traits\Helper;
 
 use App\Models\CheckList;
 use Illuminate\Support\Str;
+use App\Models\UserLoginLog;
 use App\Enums\PermissionEnum;
 use App\Models\NgoPermission;
 use App\Enums\SubPermissionEnum;
+use App\Jobs\LogUserLoginJob;
 use App\Models\NgoPermissionSub;
 use Illuminate\Http\UploadedFile;
+use Sway\Utils\StringUtils;
 
 trait HelperTrait
 {
@@ -145,5 +148,20 @@ trait HelperTrait
                 "sub_permission_id" => $id,
             ]);
         }
+    }
+    public function storeUserLog($request, $userable_id, $userable_type, $action)
+    {
+        $userAgent = $request->header('User-Agent');
+        $browser = StringUtils::extractBrowserInfo($userAgent);
+        $device = StringUtils::extractDeviceInfo($userAgent);
+        LogUserLoginJob::dispatch(
+            $userAgent,
+            $userable_id,
+            $userable_type,
+            $action,
+            $request->ip(),
+            $browser,
+            $device,
+        );
     }
 }

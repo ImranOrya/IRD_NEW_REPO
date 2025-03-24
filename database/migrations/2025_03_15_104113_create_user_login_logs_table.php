@@ -13,13 +13,12 @@ return new class extends Migration
     {
         Schema::create('user_login_logs', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('user_id');
-            $table->string('user_type');
+            $table->bigInteger('userable_id');
+            $table->string('userable_type');
             $table->string('action');
-            $table->string('local_ip_address', 50)->nullable();
-            $table->string('public_ip_address', 50)->nullable();
-            $table->string('computer_name')->nullable();
-            $table->string('result');
+            $table->string('ip_address', 50)->nullable();
+            $table->string('browser');
+            $table->string('device');
             $table->timestamps();
         });
     }

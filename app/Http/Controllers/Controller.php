@@ -146,19 +146,4 @@ abstract class Controller
     //             ->get();
     //     });
     // }
-
-    protected function userLoginLog($request, $user_id, $userType, $result)
-    {
-
-
-        UserLoginLog::create([
-            'user_id'            => $user_id,
-            'action'             => 'login',
-            'user_type'          => $userType, // Make sure this field exists in the table and model
-            'local_ip_address'   => $request->ip(), // Corrected spelling
-            'public_ip_address'  => $request->header('host') ?? $request->ip(),
-            'computer_name'      => $request->header('user-agent') ?? '', // Assuming client passes host_name in header
-            'result'             => $result,
-        ]);
-    }
 }

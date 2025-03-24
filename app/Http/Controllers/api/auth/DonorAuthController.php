@@ -2,17 +2,21 @@
 
 namespace App\Http\Controllers\api\auth;
 
+use App\Models\Donor;
 use App\Models\Email;
 use App\Models\DonorStatus;
+use Sway\Utils\StringUtils;
 use Illuminate\Http\Request;
 use App\Enums\Type\StatusTypeEnum;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Traits\Helper\HelperTrait;
 
 class DonorAuthController extends Controller
 {
+    use HelperTrait;
     public function authDonor(Request $request)
     {
         $ngo = $request->user();
@@ -110,6 +114,7 @@ class DonorAuthController extends Controller
                 )->first();
 
             $ngoPermissions = $this->permission($authDonor);
+            $this->storeUserLog($request, $authDonor->id, StringUtils::getModelName(Donor::class), "Login");
 
             return response()->json(
                 array_merge([

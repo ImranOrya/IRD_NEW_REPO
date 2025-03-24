@@ -14,9 +14,13 @@ use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Repositories\User\UserRepositoryInterface;
 use App\Http\Requests\template\user\UpdateProfilePasswordRequest;
+use App\Traits\Helper\HelperTrait;
+use Exception;
+use Sway\Utils\StringUtils;
 
 class UserAuthController extends Controller
 {
+    use HelperTrait;
     protected $userRepository;
 
     public function __construct(UserRepositoryInterface $userRepository)
@@ -99,12 +103,10 @@ class UserAuthController extends Controller
             // Get the auth user
             $user = $loggedIn['user'];
             if ($user->status == StatusTypeEnum::blocked) {
-                $this->userLoginLog($request, $user->id, User::class, 'UserBlock');
                 return response()->json([
                     'message' => __('app_translation.account_is_lock'),
                 ], 403, [], JSON_UNESCAPED_UNICODE);
             }
-            $this->userLoginLog($request, $user->id,  User::class, 'Success');
 
             $user = DB::table('users as u')
                 ->where('u.id', $user->id)
@@ -133,6 +135,8 @@ class UserAuthController extends Controller
                     "u.created_at",
                 )
                 ->first();
+
+            $this->storeUserLog($request, $user->id, StringUtils::getModelName(User::class), "Login");
             return response()->json(
                 [
                     "token" => $loggedIn['tokens']['access_token'],
