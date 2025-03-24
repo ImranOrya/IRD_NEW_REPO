@@ -16,4 +16,5 @@ enum PermissionEnum: string
     case news = "management/news";
     case about = "management/about";
     case approval = "approval";
+    case activity = "activity";
 }

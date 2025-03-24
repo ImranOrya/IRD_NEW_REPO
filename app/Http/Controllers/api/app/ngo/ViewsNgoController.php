@@ -247,9 +247,11 @@ class ViewsNgoController extends Controller
     }
     public function headerInfo($ngo_id)
     {
+        $locale = App::getLocale();
         // 1. Get ngo information
         $query = $this->ngoRepository->ngo($ngo_id);  // Start with the base query
         $this->ngoRepository->statusJoin($query)
+            ->statusTypeTransJoin($query, $locale)
             ->emailJoin($query)
             ->contactJoin($query);
         $ngo = $query->select(
@@ -257,7 +259,9 @@ class ViewsNgoController extends Controller
             'ns.status_type_id as status_id',
             'n.username',
             'c.value as contact',
-            'e.value as email'
+            'e.value as email',
+            'ns.status_type_id',
+            'stt.name as status_type',
         )->first();
         if (!$ngo) {
             return response()->json([
@@ -270,6 +274,7 @@ class ViewsNgoController extends Controller
             "username" => $ngo->username,
             "contact" => $ngo->contact,
             "email" => $ngo->email,
+            "status" => $ngo->status_type,
         ];
         return response()->json([
             'ngo' => $result,

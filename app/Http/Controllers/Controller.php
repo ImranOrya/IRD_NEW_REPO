@@ -2,24 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use Exception;
-use App\Models\User;
-use App\Models\Contact;
-use App\Models\Translate;
 use Illuminate\Support\Str;
-use App\Models\NgoTypeTrans;
-use Illuminate\Http\Request;
-use App\Models\StatusTypeTran;
 use App\Models\UserLoginLog;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Http\Request;
+use App\Traits\Helper\HelperTrait;
 
 abstract class Controller
 {
+    use HelperTrait;
     public function storeProfile(Request $request, $dynamic_path = 'user-profile', $columnName = 'profile')
     {
         // 1. If storage not exist create it.
-        $path = storage_path() . '/app/private/' . $dynamic_path . '/';
+        // $path = storage_path() . '/app/private/' . $dynamic_path . '/';
+        $path = $this->getProfilePath($dynamic_path . '/');
         // Checks directory exist if not will be created.
         !is_dir($path) && mkdir($path, 0777, true);
 
@@ -31,36 +26,36 @@ abstract class Controller
                 $fileName = Str::uuid() . '.' . $file->extension();
                 $file->move($path, $fileName);
 
-                return 'private/' . $dynamic_path . '/' . $fileName;
+                return $dynamic_path . '/' . $fileName;
             }
         }
         return null;
     }
-    // public function storeDocument(Request $request, $access = 'private', $folder, $docName = 'document')
-    // {
-    //     // 1. If storage not exist create it.
-    //     $path = storage_path() . "/app/{$access}/documents/{$folder}/";
-    //     // Checks directory exist if not will be created.
-    //     !is_dir($path) && mkdir($path, 0777, true);
+    public function storePublicDocument(Request $request, $folder, $docName = 'document')
+    {
+        // 1. If storage not exist create it.
+        $path = $this->getPublicPath($folder . '/');
+        // Checks directory exist if not will be created.
+        !is_dir($path) && mkdir($path, 0777, true);
 
-    //     // 2. Store image in filesystem
-    //     $fileName = null;
-    //     if ($request->hasFile($docName)) {
-    //         $file = $request->file($docName);
-    //         $fileExtention = $file->extension();
-    //         if ($file != null) {
-    //             $fileName = Str::uuid() . '.' . $fileExtention;
-    //             $file->move($path, $fileName);
+        // 2. Store image in filesystem
+        $fileName = null;
+        if ($request->hasFile($docName)) {
+            $file = $request->file($docName);
+            $fileExtention = $file->extension();
+            if ($file != null) {
+                $fileName = Str::uuid() . '.' . $fileExtention;
+                $file->move($path, $fileName);
 
-    //             return [
-    //                 'path' => "{$access}/documents/{$folder}/" . $fileName,
-    //                 'name' => $file->getClientOriginalName(),
-    //                 'extintion' => $fileExtention,
-    //             ];
-    //         }
-    //     }
-    //     return null;
-    // }
+                return [
+                    'path' => "{$folder}/" . $fileName,
+                    'name' => $file->getClientOriginalName(),
+                    'extintion' => $fileExtention,
+                ];
+            }
+        }
+        return null;
+    }
     // public function getTableTranslations($className, $locale, $order, $columns = ['value as name', 'translable_id as id', 'created_at as createdAt'])
     // {
     //     return Translate::where('translable_type', '=', $className)->where('language_name', '=', $locale)->select($columns)->orderBy('id', $order)->get();

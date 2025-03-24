@@ -79,6 +79,11 @@ class RolePermissionSeeder extends Seeder
             "permission" => "approval"
         ]);
         $this->rolePermissionSubApproval($rolePer->id);
+        $rolePer = RolePermission::factory()->create([
+            "role" => RoleEnum::super,
+            "permission" => "activity"
+        ]);
+        $this->rolePermissionSubActivity($rolePer->id);
     }
     public function adminPermissions()
     {
@@ -274,6 +279,15 @@ class RolePermissionSeeder extends Seeder
     public function rolePermissionSubApproval($role_permission_id)
     {
         foreach (SubPermissionEnum::APPROVALS as $id => $role) {
+            RolePermissionSub::factory()->create([
+                "role_permission_id" => $role_permission_id,
+                "sub_permission_id" => $id
+            ]);
+        }
+    }
+    public function rolePermissionSubActivity($role_permission_id)
+    {
+        foreach (SubPermissionEnum::ACTIVITY as $id => $role) {
             RolePermissionSub::factory()->create([
                 "role_permission_id" => $role_permission_id,
                 "sub_permission_id" => $id

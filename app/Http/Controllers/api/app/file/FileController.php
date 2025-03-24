@@ -2,23 +2,9 @@
 
 namespace App\Http\Controllers\api\app\file;
 
-use Carbon\Carbon;
-use App\Models\Ngo;
-use App\Models\User;
-use App\Models\Approval;
-use App\Models\Document;
-use App\Models\Agreement;
-use App\Models\CheckList;
-use App\Enums\NotifierEnum;
-use App\Models\Notification;
 use Illuminate\Http\Request;
-use App\Enums\PermissionEnum;
-use App\Models\AgreementDocument;
 use App\Traits\Helper\HelperTrait;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Enums\CheckList\CheckListEnum;
-use Illuminate\Support\Facades\Validator;
 use App\Repositories\ngo\NgoRepositoryInterface;
 use Pion\Laravel\ChunkUpload\Receiver\FileReceiver;
 use Pion\Laravel\ChunkUpload\Handler\HandlerFactory;

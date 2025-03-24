@@ -4,9 +4,9 @@
 use App\Http\Controllers\api\template\MediaController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('v1')->middleware(['api.key', "multiAuthorized:" . 'user:api,ngo:api'])->group(function () {
-    // Route::get('/media/{storage}/{folder}/{filename}', [MediaController::class, "show"]);
-    // Route::get('/media/{storage}/{access}/{folder}/{filename}', [MediaController::class, "showPublic"]);
-    Route::get('/media', [MediaController::class, "downloadFile"]);
-    // Route::get('/media/{storage}/{folder}/{folderType}/{filename}', [MediaController::class, "downloadDoc"]);
+Route::prefix('v1')->middleware(['api.key', "multiAuthorized:" . 'user:api,ngo:api,donor:api'])->group(function () {
+    Route::get('/media/profile', [MediaController::class, "downloadProfile"]);
+});
+Route::prefix('v1')->middleware(['api.key'])->group(function () {
+    Route::get('/media/public', [MediaController::class, "downloadPublicFile"]);
 });

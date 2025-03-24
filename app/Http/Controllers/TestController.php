@@ -65,6 +65,24 @@ class TestController extends Controller
     protected $userRepository;
     use HelperTrait;
 
+    private function detectDevice($userAgent)
+    {
+        if (str_contains($userAgent, 'Windows')) return 'Windows PC';
+        if (str_contains($userAgent, 'Macintosh')) return 'Mac';
+        if (str_contains($userAgent, 'iPhone')) return 'iPhone';
+        if (str_contains($userAgent, 'Android')) return 'Android Device';
+        return 'Unknown Device';
+    }
+
+    private function getLocationFromIP($ip)
+    {
+        try {
+            $response = Http::get("http://ip-api.com/json/{$ip}");
+            return $response->json()['city'] . ', ' . $response->json()['country'];
+        } catch (\Exception $e) {
+            return 'Unknown Location';
+        }
+    }
     public function __construct(
         NgoRepositoryInterface $ngoRepository,
         UserRepositoryInterface $userRepository
@@ -100,8 +118,56 @@ class TestController extends Controller
             return $approval;
         })->values();
     }
-    public function index()
+    function extractDeviceInfo($userAgent)
     {
+        // Match OS and architecture details
+        if (preg_match('/\(([^)]+)\)/', $userAgent, $matches)) {
+            return $matches[1]; // Extract content inside parentheses
+        }
+        return "Unknown Device";
+    }
+    function extractBrowserInfo($userAgent)
+    {
+        // Match major browsers (Chrome, Firefox, Safari, Edge, Opera, etc.)
+        if (preg_match('/(Chrome|Firefox|Safari|Edge|Opera|OPR|MSIE|Trident)[\/ ]([\d.]+)/', $userAgent, $matches)) {
+            $browser = $matches[1];
+            $version = $matches[2];
+
+            // Fix for Opera (uses "OPR" in User-Agent)
+            if ($browser == 'OPR') {
+                $browser = 'Opera';
+            }
+
+            // Fix for Internet Explorer (uses "Trident" in newer versions)
+            if ($browser == 'Trident') {
+                preg_match('/rv:([\d.]+)/', $userAgent, $rvMatches);
+                $version = $rvMatches[1] ?? $version;
+                $browser = 'Internet Explorer';
+            }
+
+            return "$browser $version";
+        }
+
+        return "Unknown Browser";
+    }
+    public function index(Request $request)
+    {
+        return  DB::table('refresh_tokens')
+            ->where('tokenable_id', 1)
+            ->where('tokenable_type', 'User')
+            ->where('device', 'Windows NT 10.0; Win64; x64')
+            ->delete();
+
+        // Get IP Address
+        $ip = $request->ip();
+
+        // Get User Agent
+        $userAgent = $request->header('User-Agent');
+
+        // Get Device Info (Optional - Extract from User-Agent)
+        $device = $this->detectDevice('');
+
+        return $this->extractDeviceInfo($userAgent);
         $expiresAtTimestamp = Carbon::parse("2025-03-20 21:46:58")->timestamp;
         if (Carbon::now()->timestamp > $expiresAtTimestamp) {
             return 'Token has expired';

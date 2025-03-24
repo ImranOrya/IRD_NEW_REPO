@@ -37,6 +37,13 @@ enum SubPermissionEnum: int
         32 => "ngo",
         33 => "donor"
     ];
+        // Activity
+    case user_activity = 41;
+    case password_activity = 42;
+    public const ACTIVITY = [
+        41 => "user",
+        42 => "password",
+    ];
         // NGO
     case ngo_information = 52;
     case ngo_director_information = 53;

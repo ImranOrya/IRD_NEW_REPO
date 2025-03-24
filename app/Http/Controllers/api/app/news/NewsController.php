@@ -232,7 +232,7 @@ class NewsController extends Controller
         ]);
 
         // 3. Store documents
-        $document = $this->storeDocument($request, "public", "news", 'cover_pic');
+        $document = $this->storePublicDocument($request, "news", 'cover_pic');
         NewsDocument::create([
             "news_id" => $news->id,
             "url" => $document['path'],
@@ -330,7 +330,7 @@ class NewsController extends Controller
                 unlink($path);
             }
             // 1.2 update document
-            $document = $this->storeDocument($request, "public", "news", 'cover_pic');
+            $document = $this->storePublicDocument($request, "news", 'cover_pic');
             $existingDocument->url = $document['path'];
             $existingDocument->extintion = $document['extintion'];
             $existingDocument->name = $document['name'];

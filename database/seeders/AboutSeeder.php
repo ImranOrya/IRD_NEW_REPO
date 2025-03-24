@@ -36,7 +36,7 @@ class AboutSeeder extends Seeder
             "staff_type_id" => StaffEnum::manager,
             "contact" => "+93202301375",
             "email" => "manager@moph.gov.af",
-            "profile" => 'public/placeholders/user-image.jpg',
+            "profile" => 'placeholders/user-image.jpg',
         ]);
         StaffTran::create([
             'staff_id' => $staff->id,
@@ -60,7 +60,7 @@ class AboutSeeder extends Seeder
             "staff_type_id" => StaffEnum::director,
             "contact" => "+93202301376",
             "email" => "director@moph.gov.af",
-            "profile" => 'public/placeholders/user-image.jpg',
+            "profile" => 'placeholders/user-image.jpg',
         ]);
         StaffTran::create([
             'staff_id' => $staff->id,
@@ -85,7 +85,7 @@ class AboutSeeder extends Seeder
             "staff_type_id" => StaffEnum::technical_support,
             "contact" => "+93785764809",
             "email" => "sayednaweedsayedy@gmail.com",
-            "profile" => 'public/placeholders/sayed_naweed.jpg',
+            "profile" => 'placeholders/sayed_naweed.jpg',
         ]);
         StaffTran::create([
             'staff_id' => $staff->id,
@@ -107,7 +107,7 @@ class AboutSeeder extends Seeder
             "staff_type_id" => StaffEnum::technical_support,
             "contact" => "+93767028775",
             "email" => "waheedsafi@gmail.com",
-            "profile" => 'public/placeholders/waheed.jpg',
+            "profile" => 'placeholders/waheed.jpg',
         ]);
         StaffTran::create([
             'staff_id' => $staff->id,
@@ -129,7 +129,7 @@ class AboutSeeder extends Seeder
             "staff_type_id" => StaffEnum::technical_support,
             "contact" => "+93773757829",
             "email" => "jalalbakhti@gmail.com",
-            "profile" => 'public/placeholders/jalal.jpg',
+            "profile" => 'placeholders/jalal.jpg',
         ]);
         StaffTran::create([
             'staff_id' => $staff->id,
@@ -151,7 +151,7 @@ class AboutSeeder extends Seeder
             "staff_type_id" => StaffEnum::technical_support,
             "contact" => "+93773527252",
             "email" => "imranoraya@gmail.com",
-            "profile" => 'public/placeholders/imran.jpg',
+            "profile" => 'placeholders/imran.jpg',
         ]);
         StaffTran::create([
             'staff_id' => $staff->id,

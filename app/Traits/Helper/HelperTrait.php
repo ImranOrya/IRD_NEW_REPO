@@ -39,6 +39,14 @@ trait HelperTrait
         return false;
     }
 
+    public function getPublicPath($filePath)
+    {
+        return storage_path() . "/app/public/{$filePath}";
+    }
+    public function getProfilePath($filePath)
+    {
+        return storage_path() . "/app/private/profile/{$filePath}";
+    }
     public function deleteTempFile($filePath)
     {
         return unlink(storage_path() . "/app/{$filePath}");
@@ -122,6 +130,12 @@ trait HelperTrait
             "permission" => PermissionEnum::ngo->value,
         ]);
         foreach (SubPermissionEnum::NGO as $id => $role) {
+            if ($id == SubPermissionEnum::ngo_status->value) {
+                continue;
+            }
+            if ($id == SubPermissionEnum::ngo_update_account_password->value) {
+                continue;
+            }
             NgoPermissionSub::factory()->create([
                 "edit" => true,
                 "delete" => true,

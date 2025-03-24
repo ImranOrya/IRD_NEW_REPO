@@ -124,6 +124,15 @@ class UserPermissionSeeder extends Seeder
             "permission" => "approval"
         ]);
         $this->addApprovalSubPermissions($userPermission);
+        $userPermission = UserPermission::factory()->create([
+            "view" => true,
+            "edit" => true,
+            "delete" => true,
+            "add" => true,
+            "user_id" => RoleEnum::super->value,
+            "permission" => "activity"
+        ]);
+        $this->addActivitySubPermissions($userPermission);
     }
     public function adminPermissions()
     {
@@ -373,6 +382,19 @@ class UserPermissionSeeder extends Seeder
     public function addApprovalSubPermissions($userPermission)
     {
         foreach (SubPermissionEnum::APPROVALS as $id => $role) {
+            UserPermissionSub::factory()->create([
+                "edit" => true,
+                "delete" => true,
+                "add" => true,
+                "view" => true,
+                "user_permission_id" => $userPermission->id,
+                "sub_permission_id" => $id,
+            ]);
+        }
+    }
+    public function addActivitySubPermissions($userPermission)
+    {
+        foreach (SubPermissionEnum::ACTIVITY as $id => $role) {
             UserPermissionSub::factory()->create([
                 "edit" => true,
                 "delete" => true,
