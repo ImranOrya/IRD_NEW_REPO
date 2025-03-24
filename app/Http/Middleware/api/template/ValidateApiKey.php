@@ -32,7 +32,7 @@ class ValidateApiKey
 
         // Check if the row exists
         if (!$row) {
-            return response()->json(['message' => 'Invalid or inactive API key'], 403);
+            return response()->json(['message' => 'Invalid or inactive API key'], 401);
         }
 
         // Validate the API key
@@ -40,7 +40,7 @@ class ValidateApiKey
 
             return $next($request);
         } else {
-            return response()->json(['message' => 'Invalid or inactive API key'], 403);
+            return response()->json(['message' => 'Invalid or inactive API key'], 401);
         }
     }
 }
