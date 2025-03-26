@@ -33,15 +33,26 @@ trait HelperTrait
         return file_exists(storage_path() . "/app/{$filePath}");
     }
 
-    public function deleteFile($filePath)
+    public function deleteDocument($filePath)
     {
-        $deletePath = storage_path('app/' . "{$filePath}");
+        if (is_file($filePath)) {
+            return unlink($filePath);
+        }
+        return false;
+    }
+    public function deletePublicFile($filePath)
+    {
+        $deletePath = storage_path('app/public/' . "{$filePath}");
         if (is_file($deletePath)) {
             return unlink($deletePath);
         }
         return false;
     }
 
+    public function getAppPath($filePath)
+    {
+        return storage_path() . "/app/{$filePath}";
+    }
     public function getPublicPath($filePath)
     {
         return storage_path() . "/app/public/{$filePath}";
@@ -60,7 +71,7 @@ trait HelperTrait
     }
     public function ngoRegisterDBPath($ngo_id, $agreement_id, $check_list_id, $fileName)
     {
-        return "private/ngos/ngo_{$ngo_id}/register/agreement_{$agreement_id}/checlist_{$check_list_id}/" . $fileName;
+        return "ngos/ngo_{$ngo_id}/register/agreement_{$agreement_id}/checlist_{$check_list_id}/" . $fileName;
     }
     public function checkFileWithList($file, $checklist_id)
     {

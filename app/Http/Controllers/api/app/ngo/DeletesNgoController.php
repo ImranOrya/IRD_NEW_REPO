@@ -32,25 +32,6 @@ class DeletesNgoController extends Controller
         $this->pendingTaskRepository = $pendingTaskRepository;
     }
 
-    public function deleteProfile($id)
-    {
-        $ngo = Ngo::find($id);
-        if ($ngo) {
-            $deletePath = storage_path('app/' . "{$ngo->profile}");
-            if (file_exists($deletePath) && $ngo->profile != null) {
-                unlink($deletePath);
-            }
-            // 2. Update the profile
-            $ngo->profile = null;
-            $ngo->save();
-            return response()->json([
-                'message' => __('app_translation.profile_changed')
-            ], 200, [], JSON_UNESCAPED_UNICODE);
-        } else
-            return response()->json([
-                'message' => __('app_translation.not_found'),
-            ], 404, [], JSON_UNESCAPED_UNICODE);
-    }
     public function destroyPendingTask(Request $request, $id)
     {
         $request->validate([

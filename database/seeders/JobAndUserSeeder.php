@@ -72,7 +72,7 @@ class JobAndUserSeeder extends Seeder
 
         User::factory()->create([
             "id" => RoleEnum::super->value,
-            'full_name' => 'Sayed Naweed Sayedy',
+            'full_name' => 'Super User',
             'username' => 'super@admin.com',
             'email_id' =>  $email->id,
             'password' =>  Hash::make("123123123"),

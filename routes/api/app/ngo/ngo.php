@@ -26,7 +26,6 @@ Route::prefix('v1')->middleware(['api.key', "multiAuthorized:" . 'user:api,ngo:a
   Route::post('/ngo/extend/form/complete', [ExtendNgoController::class, 'extendNgoAgreement']);
   Route::post('/ngo/store/signed/register/form', [StoresNgoController::class, 'StoreSignedRegisterForm']);
   Route::get('/ngo/header-info/{id}', [ViewsNgoController::class, 'headerInfo']);
-  Route::delete('/ngo/delete-profile/{id}', [DeletesNgoController::class, 'deleteProfile']);
 });
 Route::prefix('v1')->middleware(['api.key', "authorized:" . 'user:api'])->group(function () {
   // change ngo status route

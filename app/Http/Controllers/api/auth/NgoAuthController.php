@@ -92,7 +92,7 @@ class NgoAuthController extends Controller
         if (!$email) {
             return response()->json([
                 'message' => __('app_translation.email_not_found'),
-            ], 403, [], JSON_UNESCAPED_UNICODE);
+            ], 404, [], JSON_UNESCAPED_UNICODE);
         }
         $loggedIn = Auth::guard('ngo:api')->attempt([
             "email_id" => $email->id,
@@ -105,7 +105,7 @@ class NgoAuthController extends Controller
             if ($ngoStatus->status_type_id == StatusTypeEnum::blocked->value) {
                 return response()->json([
                     'message' => __('app_translation.account_is_block'),
-                ], 403, [], JSON_UNESCAPED_UNICODE);
+                ], 401, [], JSON_UNESCAPED_UNICODE);
             }
             // Check If Ngo logged in for first time change to un_registered
             else if (!$ngo->is_logged_in) {

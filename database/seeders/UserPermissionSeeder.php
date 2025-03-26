@@ -105,14 +105,6 @@ class UserPermissionSeeder extends Seeder
             "delete" => true,
             "add" => true,
             "user_id" => RoleEnum::super->value,
-            "permission" => "logs"
-        ]);
-        UserPermission::factory()->create([
-            "view" => true,
-            "edit" => true,
-            "delete" => true,
-            "add" => true,
-            "user_id" => RoleEnum::super->value,
             "permission" => "audit"
         ]);
         $userPermission = UserPermission::factory()->create([
@@ -322,7 +314,15 @@ class UserPermissionSeeder extends Seeder
             "user_id" => RoleEnum::debugger->value,
             "permission" => "settings"
         ]);
-        $this->addSettingSubPermissions($userPermission);
+        // Only allow language changes
+        UserPermissionSub::factory()->create([
+            "edit" => true,
+            "delete" => true,
+            "add" => true,
+            "view" => true,
+            "user_permission_id" => $userPermission->id,
+            "sub_permission_id" => SubPermissionEnum::setting_language,
+        ]);
     }
     public function addUserSubPermissions($userPermission)
     {

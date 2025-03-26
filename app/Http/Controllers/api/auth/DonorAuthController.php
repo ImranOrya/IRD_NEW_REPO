@@ -76,7 +76,7 @@ class DonorAuthController extends Controller
         if (!$email) {
             return response()->json([
                 'message' => __('app_translation.email_not_found'),
-            ], 403, [], JSON_UNESCAPED_UNICODE);
+            ], 404, [], JSON_UNESCAPED_UNICODE);
         }
         $loggedIn = Auth::guard('ngo:api')->attempt([
             "email_id" => $email->id,
@@ -89,7 +89,7 @@ class DonorAuthController extends Controller
             if ($ngoStatus->status_type_id == StatusTypeEnum::blocked->value) {
                 return response()->json([
                     'message' => __('app_translation.account_is_block'),
-                ], 403, [], JSON_UNESCAPED_UNICODE);
+                ], 401, [], JSON_UNESCAPED_UNICODE);
             }
 
             $authDonor =  DB::table('donors as d')

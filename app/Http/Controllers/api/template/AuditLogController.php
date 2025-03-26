@@ -17,7 +17,6 @@ class AuditLogController extends Controller
 
     public function audits(Request $request, $page)
     {
-        $locale = App::getLocale();
         $tr = [];
         $perPage = $request->input('per_page', 10); // Number of records per page
         $page = $request->input('page', 1); // Current page
@@ -25,61 +24,13 @@ class AuditLogController extends Controller
         // Start building the query
         $query = [];
 
-        $query = Audit::all()
-            ->with('user'); // Eager load the user who performed the action
-
-        // if ($locale === LanguageEnum::default->value) {
-        //     $query = UsersEnView::query();
-        // } else if ($locale === LanguageEnum::farsi->value) {
-        //     $query = UsersFaView::query();
-        // } else {
-        //     $query = UsersPsView::query();
-        // }
-        // Apply date filtering conditionally if provided
-        $startDate = $request->input('filters.date.startDate');
-        $endDate = $request->input('filters.date.endDate');
-
-        if ($startDate || $endDate) {
-            // Apply date range filtering
-            if ($startDate && $endDate) {
-                $query->whereBetween('createdAt', [$startDate, $endDate]);
-            } elseif ($startDate) {
-                $query->where('createdAt', '>=', $startDate);
-            } elseif ($endDate) {
-                $query->where('createdAt', '<=', $endDate);
-            }
-        }
-
-        // Apply search filter if present
-        $searchColumn = $request->input('filters.search.column');
-        $searchValue = $request->input('filters.search.value');
-
-        if ($searchColumn && $searchValue) {
-            $allowedColumns = ['username', 'contact', 'email'];
-
-            // Ensure that the search column is allowed
-            if (in_array($searchColumn, $allowedColumns)) {
-                $query->where($searchColumn, 'like', '%' . $searchValue . '%');
-            }
-        }
-
-        // Apply sorting if present
-        $sort = $request->input('filters.sort'); // Sorting column
-        $order = $request->input('filters.order', 'asc'); // Sorting order (default is 'asc')
-
-        // Apply sorting by provided column or default to 'created_at'
-        if ($sort && in_array($sort, ['username', 'createdAt', 'status', 'job', 'destination'])) {
-            $query->orderBy($sort, $order);
-        } else {
-            // Default sorting if no sort is provided
-            $query->orderBy("createdAt", $order);
-        }
+        $query = Audit::all();
 
         // Apply pagination (ensure you're paginating after sorting and filtering)
         $tr = $query->paginate($perPage, ['*'], 'page', $page);
         return response()->json(
             [
-                "users" => $tr,
+                "audiths" => $tr,
             ],
             200,
             [],
@@ -89,81 +40,39 @@ class AuditLogController extends Controller
 
     public function userType()
     {
-
         $arr = [
-            'User',
-            'NGO',
-            'Donor'
-
+            ["name" => "User"],
+            ["name" => "Ngo"],
+            ["name" => "Donor"],
         ];
         return response()->json(
-            [
-                $arr,
-            ],
+            $arr,
             200,
             [],
             JSON_UNESCAPED_UNICODE
         );
     }
 
-    public function userList(Request $request)
+    public function users(Request $request)
     {
         $request->validate([
             'user_type' => 'required'
         ]);
-
+        $tr = [];
         if ($request->user_type === 'User') {
-
-            $user =   User::select('id', 'full_name as name')->get();
-
-            return response()->json(
-                [
-                    'user' => $user,
-                    'message' => __('app_translation.success'),
-
-                ],
-                200,
-                [],
-                JSON_UNESCAPED_UNICODE
-            );
+            $tr = User::select('id', 'full_name as name')->get();
+        } else if ($request->user_type === 'Ngo') {
+            $tr = Ngo::select('id', 'username as name')->get();
+        } else if ($request->user_type === 'Donor') {
+            $tr = Donor::select('id', 'username as name')->get();
         }
-        if ($request->user_type === 'NGO') {
-            $ngo = Ngo::select('id', 'username as name')->get();
-            return response()->json(
-                [
-                    'user' => $ngo,
-                    'message' => __('app_translation.success'),
 
-                ],
-                200,
-                [],
-                JSON_UNESCAPED_UNICODE
-            );
-        }
-        if ($request->user_type === 'Donor') {
-
-            $donor = Donor::select('id', 'username as name')->get();
-            return response()->json(
-                [
-                    'user' => $donor,
-                    'message' => __('app_translation.success'),
-
-                ],
-                200,
-                [],
-                JSON_UNESCAPED_UNICODE
-            );
-        } else {
-            return response()->json(
-                [
-                    'message' => __('app_translation.not_found'),
-
-                ],
-                200,
-                [],
-                JSON_UNESCAPED_UNICODE
-            );
-        }
+        return response()->json(
+            $tr,
+            200,
+            [],
+            JSON_UNESCAPED_UNICODE
+        );
     }
     public function tableList(Request $request)
     {
@@ -172,48 +81,21 @@ class AuditLogController extends Controller
             'user_id' => 'required|integer'
         ]);
 
-        $type = match ($request->user_type) {
-            'User' => 'App\Models\User',
-            'NGO' => 'App\Models\Ngo',
-            'Donor' => 'App\Models\Donor',
-            default => null
-        };
-
-        if (!$type) {
-            return response()->json(
-                [
-                    'message' => __('app_translation.not_found'),
-                ],
-                200,
-                [],
-                JSON_UNESCAPED_UNICODE
-            );
-        }
-
         // Get distinct auditable_type values
         $table = Audit::select('auditable_type')
-            ->where('user_type', $type)
+            ->where('user_type', $request->user_type)
             ->where('user_id', $request->user_id)
-            ->distinct()  // Ensure the values are distinct
-            ->pluck('auditable_type');  // Return as a simple array
-
-        // Extract model names from the fully qualified class names
-        $modelNames = $table->map(function ($item) {
-            return basename(str_replace('\\', '/', $item));  // Get only the model name
-        });
+            ->distinct()
+            ->pluck('auditable_type')
+            ->map(fn($item) => ['name' => $item]);
 
         return response()->json(
-            [
-                'table' => $modelNames,  // This is the array of unique model names
-                'message' => __('app_translation.success'),
-            ],
+            $table,
             200,
             [],
             JSON_UNESCAPED_UNICODE
         );
     }
-
-
 
     public function columnList(Request $request)
     {
@@ -253,12 +135,10 @@ class AuditLogController extends Controller
 
         // Get the column names for the table
         $columns = Schema::getColumnListing($tableName);
+        $formattedColumns = array_map(fn($column) => ['name' => $column], $columns);
 
         return response()->json(
-            [
-                'columns' => $columns,  // Return the column names
-                'message' => __('app_translation.success'),
-            ],
+            $formattedColumns,
             200,
             [],
             JSON_UNESCAPED_UNICODE

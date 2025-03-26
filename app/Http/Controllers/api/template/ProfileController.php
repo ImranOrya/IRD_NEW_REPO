@@ -17,6 +17,7 @@ use App\Http\Controllers\Controller;
 use App\Repositories\ngo\NgoRepositoryInterface;
 use App\Http\Requests\Auth\ngo\NgoProfileUpdateRequest;
 use App\Http\Requests\template\user\ProfileUpdateRequest;
+use Illuminate\Support\Facades\Log;
 
 class ProfileController extends Controller
 {
@@ -33,7 +34,7 @@ class ProfileController extends Controller
     {
         $authUser = $request->user();
         // 1. delete old profile
-        $this->deleteFile($authUser->profile);
+        $this->deleteDocument($this->getProfilePath($authUser->profile));
         // 2. Update the profile
         $authUser->profile = null;
         $authUser->save();
@@ -68,7 +69,7 @@ class ProfileController extends Controller
         $path = $this->storeProfile($request, $dynamic_path);
         if ($path != null) {
             // 1. delete old profile
-            $this->deleteFile($authUser->profile);
+            $this->deleteDocument($this->getProfilePath($authUser->profile));
             // 2. Update the profile
             $authUser->profile = $path;
         }

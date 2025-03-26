@@ -6,6 +6,7 @@ use Illuminate\Support\Str;
 use App\Models\UserLoginLog;
 use Illuminate\Http\Request;
 use App\Traits\Helper\HelperTrait;
+use Illuminate\Support\Facades\Log;
 
 abstract class Controller
 {
@@ -43,6 +44,7 @@ abstract class Controller
         if ($request->hasFile($docName)) {
             $file = $request->file($docName);
             $fileExtention = $file->extension();
+
             if ($file != null) {
                 $fileName = Str::uuid() . '.' . $fileExtention;
                 $file->move($path, $fileName);

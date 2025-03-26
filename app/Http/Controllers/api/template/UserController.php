@@ -349,7 +349,7 @@ class UserController extends Controller
         $path = $this->storeProfile($request);
         if ($path != null) {
             // 1. delete old profile
-            $this->deleteFile($user->profile);
+            $this->deleteDocument($this->getProfilePath($user->profile));
             // 2. Update the profile
             $user->profile = $path;
         }
@@ -368,7 +368,7 @@ class UserController extends Controller
             ], 404, [], JSON_UNESCAPED_UNICODE);
         }
         // 1. delete old profile
-        $this->deleteFile($user->profile);
+        $this->deleteDocument($this->getProfilePath($user->profile));
         // 2. Update the profile
         $user->profile = null;
         $user->save();

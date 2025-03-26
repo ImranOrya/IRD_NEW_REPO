@@ -259,14 +259,19 @@ class AboutController extends Controller
         // Begin transaction
         DB::beginTransaction();
         // Store the profile
-        $profile = $this->storeProfile($request, 'staff-profile', "picture");
+        $document = $this->storePublicDocument($request, "staff-profile", 'picture');
+        if (!$document) {
+            return response()->json([
+                'message' => __('app_translation.failed'),
+            ], 400, [], JSON_UNESCAPED_UNICODE);
+        }
 
         // Store Staff data
         $staff = Staff::create([
             'contact' => $validateData['contact'],
             'email' => $validateData['email'],
             'staff_type_id' => $validateData['staff_type_id'],
-            'profile' => $profile,
+            'profile' => $document['path'],
         ]);
 
         // Handle translation insertion
@@ -295,7 +300,7 @@ class AboutController extends Controller
                 "name_farsi" => $validateData['name_farsi'],
                 "contact" => $validateData['contact'],
                 "email" => $validateData['email'],
-                "picture" => $profile,
+                "picture" => $document['path'],
             ]
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
@@ -383,14 +388,17 @@ class AboutController extends Controller
         $profile = $staff->profile;
         if ($profile !== $request->picture) {
             // Update profile
-            $path = storage_path('app/' . $profile);
+            $this->deletePublicFile($request->picture);
 
-            if (file_exists($path)) {
-                unlink($path);
-            }
             // 1.2 update document
-            $profile = $this->storeProfile($request, 'staff-profile', 'picture');
-            $staff->profile = $profile;
+            $document = $this->storePublicDocument($request, "staff-profile", 'picture');
+            if (!$document) {
+                return response()->json([
+                    'message' => __('app_translation.failed'),
+                    'path' => $document,
+                ], 400, [], JSON_UNESCAPED_UNICODE);
+            }
+            $staff->profile =  $document['path'];
         }
 
         // Update Staff details
@@ -422,7 +430,7 @@ class AboutController extends Controller
                 "name_farsi" => $validateData['name_farsi'],
                 "contact" => $validateData['contact'],
                 "email" => $validateData['email'],
-                "picture" => $profile,
+                "picture" => $staff->profile,
             ]
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
@@ -446,17 +454,16 @@ class AboutController extends Controller
             $mimetype = $file->getMimeType();
             $authUser = $request->user();
 
-            $directory = storage_path() . "/app/public/slider/";
+            $directory = $this->getPublicPath("slider/");
 
             if (!is_dir($directory)) {
                 mkdir($directory, 0775, true);
             }
             $file->move($directory, $fileName);
-            $dbStorePath = "public/slider/" . $fileName;
             // 1. Store in database
             $slider = Slider::create([
                 "name" => $fileActualName,
-                "path" => $dbStorePath,
+                "path" => 'slider/' . $fileName,
                 "extension" => $mimetype,
                 "is_active" => true,
                 "user_id" => $authUser->id,

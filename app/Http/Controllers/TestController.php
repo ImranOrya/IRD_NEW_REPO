@@ -8,10 +8,11 @@ use App\Models\News;
 use App\Models\Role;
 use App\Models\User;
 
+use App\Models\Audit;
 use App\Models\Email;
 use App\Models\Staff;
-use App\Models\Gender;
 
+use App\Models\Gender;
 use App\Enums\RoleEnum;
 use App\Models\Address;
 use App\Models\Country;
@@ -45,8 +46,8 @@ use App\Enums\Type\StatusTypeEnum;
 use App\Models\PendingTaskContent;
 use App\Traits\Helper\HelperTrait;
 use Illuminate\Support\Facades\DB;
-use App\Models\PendingTaskDocument;
 
+use App\Models\PendingTaskDocument;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 use App\Enums\Type\ApprovalTypeEnum;
@@ -54,6 +55,7 @@ use App\Traits\Address\AddressTrait;
 use function Laravel\Prompts\select;
 use Illuminate\Support\Facades\Http;
 use App\Enums\CheckList\CheckListEnum;
+use Illuminate\Support\Facades\Schema;
 use App\Enums\Type\RepresenterTypeEnum;
 use App\Enums\Type\RepresentorTypeEnum;
 use App\Repositories\ngo\NgoRepositoryInterface;
@@ -152,11 +154,9 @@ class TestController extends Controller
     }
     public function index(Request $request)
     {
-        return  DB::table('refresh_tokens')
-            ->where('tokenable_id', 1)
-            ->where('tokenable_type', 'User')
-            ->where('device', 'Windows NT 10.0; Win64; x64')
-            ->delete();
+
+        $columns =  Schema::getColumnListing('users');
+        $formattedColumns = array_map(fn($column) => ['name' => $column], $columns);
 
         // Get IP Address
         $ip = $request->ip();

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
+use Sway\Utils\StringUtils;
 
 trait Auditable
 {
@@ -73,11 +74,12 @@ trait Auditable
         $userAgent = Request::header('User-Agent');
 
         // Save audit data into the 'audits' table
+        $auditable_type = get_class($this);
         Audit::create([
-            'user_type' => $userType,
+            'user_type' => $userType != null ? StringUtils::getModelName($userType) : null,
             'user_id' => $userId,
             'event' => $event,
-            'auditable_type' => get_class($this),
+            'auditable_type' => $auditable_type != null ? StringUtils::getModelName($auditable_type) : null,
             'auditable_id' => $this->getKey(),
             'old_values' => $oldValues ? json_encode($oldValues) : null, // Ensure null if no old values
             'new_values' => $newValues ? json_encode($newValues) : null, // Ensure null if no new values

@@ -93,7 +93,7 @@ class UserAuthController extends Controller
         if (!$email) {
             return response()->json([
                 'message' => __('app_translation.email_not_found'),
-            ], 403, [], JSON_UNESCAPED_UNICODE);
+            ], 404, [], JSON_UNESCAPED_UNICODE);
         }
         $loggedIn = Auth::guard('user:api')->attempt([
             "email_id" => $email->id,
@@ -105,7 +105,7 @@ class UserAuthController extends Controller
             if ($user->status == StatusTypeEnum::blocked) {
                 return response()->json([
                     'message' => __('app_translation.account_is_lock'),
-                ], 403, [], JSON_UNESCAPED_UNICODE);
+                ], 401, [], JSON_UNESCAPED_UNICODE);
             }
 
             $user = DB::table('users as u')

@@ -45,10 +45,6 @@ class RolePermissionSeeder extends Seeder
         ]);
         RolePermission::factory()->create([
             "role" => RoleEnum::super,
-            "permission" => "logs"
-        ]);
-        RolePermission::factory()->create([
-            "role" => RoleEnum::super,
             "permission" => "audit"
         ]);
         $rolePer = RolePermission::factory()->create([
@@ -192,7 +188,10 @@ class RolePermissionSeeder extends Seeder
             "role" => RoleEnum::debugger,
             "permission" => "settings"
         ]);
-        $this->rolePermissionSubSetting($rolePer->id);
+        RolePermissionSub::factory()->create([
+            "role_permission_id" => $rolePer->id,
+            "sub_permission_id" => SubPermissionEnum::setting_language
+        ]);
     }
     public function ngoPermissions()
     {
