@@ -164,45 +164,28 @@ class RepresentorController extends Controller
         $request->validated();
         $ngo_id = $request->ngo_id;
         $authUser = $request->user();
+        $agreement = null;
         $ngo = DB::table('ngos as n')
             ->where('n.id', $ngo_id)
-            ->join('ngo_statuses as ns', function ($join) {
-                $join->on('n.id', '=', 'ns.ngo_id')
-                    ->where('ns.is_active', true);
-            })->select(
-                'n.id',
-                'ns.status_type_id'
-            )
             ->first();
         if (!$ngo) {
             return response()->json([
                 'message' => __('app_translation.ngo_not_found'),
             ], 200, [], JSON_UNESCAPED_UNICODE);
         }
-        if (
-            $ngo->status_type_id != StatusEnum::expired->value ||
-            $ngo->status_type_id != StatusEnum::registered->value ||
-            $ngo->status_type_id != StatusEnum::extended->value
-        ) {
-            return response()->json([
-                'message' => __('app_translation.unauthorized')
-            ], 401);
-        }
-        $agreement = null;
-        // 1. Get current agreement
-        if ($ngo->status_type_id == StatusEnum::registered->value) {
-            $agreement = Agreement::where('ngo_id', $ngo_id)
-                ->latest('end_date')
-                ->first();
-        } else {
-            $agreement = Agreement::where('ngo_id', $ngo_id)
-                ->where('end_date', null)
-                ->first();
-        }
+        $agreement = Agreement::where('ngo_id', $ngo_id)
+            ->whereNull('end_date')
+            ->first();
+
         if (!$agreement) {
-            return response()->json([
-                'message' => __('app_translation.agreement_not_exists')
-            ], 409);
+            $agreement = Agreement::where('ngo_id', $ngo_id)
+                ->orderByDesc('end_date')
+                ->first();
+            if (!$agreement) {
+                return response()->json([
+                    'message' => __('app_translation.agreement_not_exists')
+                ], 409);
+            }
         }
         // 2. Transaction
         DB::beginTransaction();
@@ -283,44 +266,30 @@ class RepresentorController extends Controller
         $authUser = $request->user();
         $ngo = DB::table('ngos as n')
             ->where('n.id', $ngo_id)
-            ->join('ngo_statuses as ns', function ($join) {
-                $join->on('n.id', '=', 'ns.ngo_id')
-                    ->where('ns.is_active', true);
-            })->select(
-                'n.id',
-                'ns.status_type_id'
-            )
             ->first();
         if (!$ngo) {
             return response()->json([
                 'message' => __('app_translation.ngo_not_found'),
             ], 200, [], JSON_UNESCAPED_UNICODE);
         }
-        if (
-            $ngo->status_type_id != StatusEnum::expired->value ||
-            $ngo->status_type_id != StatusEnum::registered->value ||
-            $ngo->status_type_id != StatusEnum::extended->value
-        ) {
-            return response()->json([
-                'message' => __('app_translation.unauthorized')
-            ], 401);
-        }
+
         $agreement = null;
-        // 1. Get current agreement
-        if ($ngo->status_type_id == StatusEnum::registered->value) {
-            $agreement = Agreement::where('ngo_id', $ngo_id)
-                ->latest('end_date')
-                ->first();
-        } else {
-            $agreement = Agreement::where('ngo_id', $ngo_id)
-                ->where('end_date', null)
-                ->first();
-        }
+        $agreement = Agreement::where('ngo_id', $ngo_id)
+            ->whereNull('end_date')
+            ->first();
+
         if (!$agreement) {
-            return response()->json([
-                'message' => __('app_translation.agreement_not_exists')
-            ], 409);
+            $agreement = Agreement::where('ngo_id', $ngo_id)
+                ->orderByDesc('end_date')
+                ->first();
+            if (!$agreement) {
+                return response()->json([
+                    'message' => __('app_translation.agreement_not_exists')
+                ], 409);
+            }
         }
+
+        // Validate status
         $representer = Representer::find($representer_id);
         if (!$representer) {
             return response()->json([

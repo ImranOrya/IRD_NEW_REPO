@@ -143,6 +143,12 @@ class ProjectStoreRequest extends FormRequest
             "action_plan_pashto" =>  "required|min:5",
             "action_plan_farsi" =>  "required|min:5",
 
+            "organization_sen_man_english" =>  "required|min:5",
+            "organization_sen_man_farsi" =>  "required|min:5",
+            "organization_sen_man_pashto" =>  "required|min:5",
+
+
+
         ];
     }
 }

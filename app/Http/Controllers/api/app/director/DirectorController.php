@@ -57,10 +57,12 @@ class DirectorController extends Controller
             'nid_type_id' => $request->identity_type['id'],
             'is_active' => 1,
             'gender_id' => $request->gender['id'],
-            'country_id' => $request->nationality['id'],
+            'nationality_id' => $request->nationality['id'],
             'address_id' => $address->id,
             'email_id' => $email->id,
             'contact_id' => $contact->id,
+            'userable_type' => get_class($request->user()),
+            'userable_id' => $request->user()->id,
         ]);
         foreach (LanguageEnum::LANGUAGES as $code => $name) {
             DirectorTran::create([
@@ -97,7 +99,7 @@ class DirectorController extends Controller
             ->select(
                 'd.id',
                 'd.is_active',
-                'd.country_id',
+                'd.nationality_id',
                 DB::raw("CONCAT(dt.name, ' ', dt.last_name) as name")
             )
             ->get();
@@ -109,7 +111,7 @@ class DirectorController extends Controller
     {
         $locale = App::getLocale();
         $director = DB::table('directors as d')
-            ->where('d.ngo_id', $id)
+            ->where('d.id', $id)
             ->where('d.is_active', true)
             ->join('director_trans as dirt', 'dirt.director_id', '=', 'd.id')
             ->join('nationality_trans as nt', function ($join) use ($locale) {
@@ -296,7 +298,7 @@ class DirectorController extends Controller
         $director->nid_no = $request->nid;
         $director->nid_type_id = $request->identity_type['id'];
         $director->gender_id = $request->gender['id'];
-        $director->country_id = $request->nationality['id'];
+        $director->nationality_id = $request->nationality['id'];
         // Update Address translations
         $addressTrans = AddressTran::where('address_id', $address->id)->get();
         foreach ($addressTrans as $addressTran) {

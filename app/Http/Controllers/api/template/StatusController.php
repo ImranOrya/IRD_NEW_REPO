@@ -14,10 +14,26 @@ use App\Models\DonorStatus;
 class StatusController extends Controller
 {
 
-    public function blockStatus()
+    public function blockStatus($id)
     {
         $locale = App::getLocale();
-        $includes = [StatusEnum::block->value];
+
+        $includes = [];
+        $userStatus = DB::table('ngo_statuses as ns')
+            ->where("ns.ngo_id", $id)
+            ->where('is_active', true)
+            ->select('ns.status_id')
+            ->first();
+
+        if (
+            $userStatus->status_id == StatusEnum::block->value
+        ) {
+            $includes[] = StatusEnum::active->value;
+        } else {
+            $includes[] = StatusEnum::block->value;
+        }
+
+        $locale = App::getLocale();
         $statuses = DB::table('statuses as st')
             ->whereIn('st.id', $includes)
             ->leftjoin('status_trans as stt', function ($join) use ($locale) {

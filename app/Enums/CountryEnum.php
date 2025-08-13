@@ -4,5 +4,5 @@ namespace App\Enums;
 
 enum CountryEnum: int
 {
-    case afghanistan = 1;
+    case afghanistan = 2;
 }

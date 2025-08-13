@@ -34,7 +34,7 @@ return new class extends Migration
             $table->text('mission');
             $table->text('vission');
             $table->text('terminologies');
-            $table->text('prev_proj_activi');
+            $table->text('organization_senior_manangement');
             $table->string('name');
             $table->timestamps();
         });

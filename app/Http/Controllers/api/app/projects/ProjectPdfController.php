@@ -242,7 +242,7 @@ class ProjectPdfController extends Controller
             'abbr' => $project->terminologies,
             'org_vision' => $project->ngo_vision,
             'org_mission' =>  $project->ngo_mission,
-            'org_management_working_area' => $project->health_experience,
+            'org_management_working_area' => $project->organization_senior_manangement,
             'project_structure' => $project->project_structure,
             'backgroud_experince' => $project->health_experience,
             'provision_health_service' => $project->prev_proj_activi,

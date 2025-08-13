@@ -13,18 +13,15 @@ return new class extends Migration
     {
         Schema::create('project_managers', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('email_id');
-            $table->foreign('email_id')->references('id')->on('emails')
+            $table->unsignedBigInteger('manager_id');
+            $table->foreign('manager_id')->references('id')->on('managers')
                 ->onUpdate('cascade')
                 ->onDelete('no action');
-            $table->unsignedBigInteger('contact_id');
-            $table->foreign('contact_id')->references('id')->on('contacts')
+            $table->unsignedBigInteger('project_id');
+            $table->foreign('project_id')->references('id')->on('projects')
                 ->onUpdate('cascade')
                 ->onDelete('no action');
-            $table->unsignedBigInteger('ngo_id');
-            $table->foreign('ngo_id')->references('id')->on('ngos')
-                ->onUpdate('cascade')
-                ->onDelete('no action');
+            $table->boolean('is_active')->default(false);
             $table->timestamps();
         });
     }

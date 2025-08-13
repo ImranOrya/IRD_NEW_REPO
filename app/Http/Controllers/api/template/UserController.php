@@ -56,7 +56,6 @@ class UserController extends Controller
                 "u.id",
                 "u.username",
                 "u.profile",
-                "u.status",
                 "u.created_at",
                 "e.value AS email",
                 "c.value AS contact",
@@ -94,7 +93,6 @@ class UserController extends Controller
             ->select(
                 'u.id',
                 "u.profile",
-                "u.status",
                 "u.grant_permission",
                 'u.full_name',
                 'u.username',
@@ -122,7 +120,6 @@ class UserController extends Controller
                     "username" => $user->username,
                     'email' => $user->email,
                     "profile" => $user->profile,
-                    "status" => $user->status == 1,
                     "grant" => $user->grant_permission == 1,
                     "role" => ['id' => $user->role_id, 'name' => $user->role_name],
                     'contact' => $user->contact,
@@ -177,7 +174,6 @@ class UserController extends Controller
             "job_id" => $request->job_id,
             "contact_id" => $contact ? $contact->id : $contact,
             "profile" => null,
-            "status" => $request->status,
             "grant_permission" => $request->grant,
         ]);
 
@@ -203,7 +199,6 @@ class UserController extends Controller
                 "username" => $newUser->username,
                 'email' => $request->email,
                 "profile" => $newUser->profile,
-                "status" => $newUser->status,
                 "job" => $request->job,
                 "created_at" => $newUser->created_at,
             ],
@@ -263,7 +258,6 @@ class UserController extends Controller
             $user->username = $request->username;
             $user->role_id = $request->role;
             $user->job_id = $request->job;
-            $user->status = $request->status === "true" ? true : false;
             $user->grant_permission = $request->grant === "true" ? true : false;
             $user->save();
 

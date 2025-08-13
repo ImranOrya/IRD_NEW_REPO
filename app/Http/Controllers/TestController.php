@@ -214,6 +214,32 @@ class TestController extends Controller
     public function index(Request $request)
     {
         $locale = App::getLocale();
+        $directors = DB::table('directors as d')
+            ->where('d.id', 2)
+            ->join('director_trans as dt', function ($join) use ($locale) {
+                $join->on('dt.director_id', '=', 'd.id')
+                    ->where('dt.language_name', '=', $locale);
+            })
+            ->join('contacts as c', 'd.contact_id', '=', 'c.id')
+            ->join('emails as e', 'd.email_id', '=', 'e.id')
+            ->select(
+                'd.id',
+                'd.is_active',
+                'dt.name',
+                'dt.last_name as surname',
+                'c.value as contact',
+                'e.value as email',
+            )
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return response()->json([
+            'message' => __('app_translation.success'),
+            'directors' => $directors,
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+
+
+        $locale = App::getLocale();
         $includes = [StatusEnum::block->value];
         $statuses = DB::table('statuses as st')
             ->whereIn('st.id', $includes)

@@ -12,10 +12,10 @@ class ProjectManagerController extends Controller
     public function names($ngoId)
     {
         $locale = App::getLocale();
-        $query =    DB::table('project_managers as pm')
+        $query =    DB::table('managers as pm')
             ->where('pm.ngo_id', $ngoId)
-            ->join('project_manager_trans as pmt', function ($join) use ($locale) {
-                $join->on('pm.id', '=', 'pmt.project_manager_id')
+            ->join('manager_trans as pmt', function ($join) use ($locale) {
+                $join->on('pm.id', '=', 'pmt.manager_id')
                     ->where('language_name', $locale);
             })
             ->select(

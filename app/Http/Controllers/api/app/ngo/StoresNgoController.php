@@ -31,12 +31,15 @@ use Illuminate\Support\Facades\App;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use App\Enums\CheckList\CheckListEnum;
+use App\Enums\CheckListTypeEnum;
 use App\Http\Requests\app\ngo\NgoRegisterRequest;
 use App\Http\Requests\app\ngo\NgoInitStoreRequest;
 use App\Repositories\Storage\StorageRepositoryInterface;
 use App\Repositories\Approval\ApprovalRepositoryInterface;
 use App\Repositories\Director\DirectorRepositoryInterface;
 use App\Http\Requests\app\ngo\StoreSignedRegisterFormRequest;
+use App\Models\CheckList;
+use App\Models\CheckListTrans;
 use App\Repositories\PendingTask\PendingTaskRepositoryInterface;
 use App\Repositories\Notification\NotificationRepositoryInterface;
 use App\Repositories\Representative\RepresentativeRepositoryInterface;
@@ -298,6 +301,13 @@ class StoresNgoController extends Controller
             array_push($exclude, CheckListEnum::director_work_permit->value);
         }
 
+        $checlklistValidat = $this->validateCheckList($task, $exclude, CheckListTypeEnum::ngo_registeration);
+        if ($checlklistValidat) {
+            return response()->json([
+                'errors' => $checlklistValidat,
+                'message' => __('app_translation.ngo_not_found'),
+            ], 404, [], JSON_UNESCAPED_UNICODE);
+        }
         DB::beginTransaction();
         $email = Email::where('value', $validatedData['email'])
             ->select('id')->first();
@@ -557,4 +567,39 @@ class StoresNgoController extends Controller
             JSON_UNESCAPED_UNICODE
         );
     }
+    // protected function validateCheckList($task)
+    // {
+
+    //     // Get checklist IDs
+    //     $checkListIds = CheckList::where('check_list_type_id', CheckListTypeEnum::ngoRegister)
+    //         ->pluck('id')
+    //         ->toArray();
+
+    //     // Get checklist IDs from documents
+    //     $documentCheckListIds = $this->pendingTaskRepository->pendingTaskDocumentQuery(
+    //         $task->id
+    //     )->pluck('check_list_id')
+    //         ->toArray();
+
+    //     // Find missing checklist IDs
+    //     $missingCheckListIds = array_diff($checkListIds, $documentCheckListIds);
+
+    //     if (count($missingCheckListIds) > 0) {
+    //         // Retrieve missing checklist names
+    //         $missingCheckListNames = CheckListTrans::whereIn('check_list_id', $missingCheckListIds)
+    //             ->where('language_name', app()->getLocale()) // If multilingual, get current language
+    //             ->pluck('value');
+
+
+    //         $errors = [];
+    //         foreach ($missingCheckListNames as $item) {
+    //             array_push($errors, [__('app_translation.checklist_not_found') . ' ' . $item]);
+    //         }
+
+    //         return $errors;
+    //     }
+
+    //     return null;
+    // }
+
 }

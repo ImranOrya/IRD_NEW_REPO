@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\api\app\projects;
 
+use App\Enums\CheckList\CheckListEnum;
+use App\Enums\CheckListTypeEnum;
 use App\Models\Email;
 use App\Models\Contact;
 use App\Models\Project;
@@ -27,6 +29,8 @@ use App\Http\Controllers\Controller;
 use App\Models\ProjectDistrictDetail;
 use App\Models\ProjectDistrictDetailTran;
 use App\Http\Requests\app\project\ProjectStoreRequest;
+use App\Models\Manager;
+use App\Models\ManagerTran;
 use App\Repositories\Storage\StorageRepositoryInterface;
 use App\Repositories\Approval\ApprovalRepositoryInterface;
 use App\Repositories\Director\DirectorRepositoryInterface;
@@ -101,7 +105,7 @@ class ProjectStoreController extends Controller
             }
 
             // 3. Create Project Manager
-            $project_manager = ProjectManager::create([
+            $project_manager = Manager::create([
                 'email_id' => $email->id,
                 'contact_id' => $contact->id,
                 'ngo_id' => $user_id,
@@ -111,15 +115,15 @@ class ProjectStoreController extends Controller
             foreach (LanguageEnum::LANGUAGES as $code => $lang) {
                 $field = 'pro_manager_name_' . $lang;
 
-                ProjectManagerTran::create([
-                    'project_manager_id' => $project_manager->id,
+                ManagerTran::create([
+                    'manager_id' => $project_manager->id,
                     'full_name' => $request->get($field),
                     'language_name' => $code,
                 ]);
             }
         } else {
             // Use existing
-            $project_manager = ProjectManager::findOrFail($request->manager['id']);
+            $project_manager = Manager::findOrFail($request->manager['id']);
         }
 
 
@@ -132,7 +136,6 @@ class ProjectStoreController extends Controller
             'donor_registration_no' => $request->donor_register_no,
             'currency_id' => $request->currency['id'],
             'donor_id' => $request->donor['id'],
-            'project_manager_id' => $project_manager->id,
             'country_id' => CountryEnum::afghanistan->value, // hardcoded — optional improvement: make dynamic
             'registration_no' => '',
             'ngo_id' => $user_id,
@@ -141,6 +144,11 @@ class ProjectStoreController extends Controller
         $project->registration_no = 'IRD-P-' . $project->id;
         $project->save();
 
+        ProjectManager::create([
+            'manager_id' => $project_manager->id,
+            'project_id' => $project->id,
+            'is_active' => true,
+        ]);
         // Store Project Translations
         $translationFields = [
             'preamble'           => 'preamble',
@@ -157,8 +165,8 @@ class ProjectStoreController extends Controller
             'vission'   => 'vission', //
             'terminologies' => 'abbreviat',
             'name' => 'project_name',
-            'prev_proj_activi' => 'exper_in_health',
-            'project_structure' => 'project_structure'
+            'project_structure' => 'project_structure',
+            'organization_senior_manangement' => 'organization_sen_man',
         ];
 
         foreach (LanguageEnum::LANGUAGES as $code => $lang) {
@@ -228,6 +236,20 @@ class ProjectStoreController extends Controller
                 'message' => __('app_translation.task_not_found')
             ], 404);
         }
+
+        $exclude = [
+            CheckListEnum::project_presentation->value,
+            CheckListEnum::mou_en->value,
+            CheckListEnum::mou_fa->value,
+            CheckListEnum::mou_ps->value,
+        ];
+        $checklistValidate = $this->validateCheckList($task, $exclude, CheckListTypeEnum::project_registeration);
+
+        return response()->json([
+            'errors' => $checklistValidate,
+            'message' => __('app_translation.checklist_not_found'),
+        ], 404, [], JSON_UNESCAPED_UNICODE);
+
         $documentsId = [];
         $this->storageRepository->projectDocumentStore($project->id, $user_id, $task->id, function ($documentData) use (&$documentsId) {
             $checklist_id = $documentData['check_list_id'];

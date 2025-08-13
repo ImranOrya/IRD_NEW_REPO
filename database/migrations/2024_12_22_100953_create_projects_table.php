@@ -31,10 +31,7 @@ return new class extends Migration
             $table->foreign('ngo_id')->references('id')->on('ngos')
                 ->onUpdate('cascade')
                 ->onDelete('no action');
-            $table->unsignedBigInteger('project_manager_id');
-            $table->foreign('project_manager_id')->references('id')->on('project_managers')
-                ->onUpdate('cascade')
-                ->onDelete('no action');
+
             $table->unsignedBigInteger('country_id');
             $table->foreign('country_id')->references('id')->on('countries')
                 ->onUpdate('cascade')

@@ -15,9 +15,7 @@ return new class extends Migration
             $table->id(); // Auto-incrementing ID column
             $table->string('user_type')->nullable(); // Class name of the user (e.g., App\Models\User)
             $table->unsignedBigInteger('user_id')->nullable(); // ID of the user who performed the action
-            $table->foreign('user_id')->references('id')->on('users')
-                ->onUpdate('cascade')
-                ->onDelete('no action');
+
             $table->string('event'); // Type of event (created, updated, deleted)
             $table->morphs('auditable');
             $table->json('old_values')->nullable(); // Old values of the model (for update events)

@@ -2,6 +2,7 @@
 
 namespace App\Traits\Helper;
 
+use App\Enums\CheckListTypeEnum;
 use App\Models\CheckList;
 use App\Enums\LanguageEnum;
 use Illuminate\Support\Str;
@@ -13,6 +14,7 @@ use App\Models\NgoPermission;
 use App\Models\NgoStatusTrans;
 use App\Enums\SubPermissionEnum;
 use App\Models\AgreementStatusTrans;
+use App\Models\CheckListTrans;
 use App\Models\NgoPermissionSub;
 use Illuminate\Http\UploadedFile;
 
@@ -234,5 +236,44 @@ trait HelperTrait
                 "language_name" => $code,
             ]);
         }
+    }
+
+    protected function validateCheckList($task, $exclude = [], $type)
+    {
+
+
+        // If nationality is Afghanistan, require work permit
+
+        // Get all checklist IDs of this type
+        $checkListIds = CheckList::where('check_list_type_id', $type)
+            ->pluck('id')
+            ->toArray();
+
+        // Remove excluded checklist IDs
+        $checkListIds = array_diff($checkListIds, $exclude);
+
+        // Get checklist IDs from task documents
+        $documentCheckListIds = $this->pendingTaskRepository->pendingTaskDocumentQuery($task->id)
+            ->pluck('check_list_id')
+            ->toArray();
+
+        // Find missing checklist IDs
+        $missingCheckListIds = array_diff($checkListIds, $documentCheckListIds);
+
+        if (count($missingCheckListIds) > 0) {
+            $missingCheckListNames = CheckListTrans::whereIn('check_list_id', $missingCheckListIds)
+                ->where('language_name', app()->getLocale())
+                ->pluck('value');
+
+            $errors = [];
+            foreach ($missingCheckListNames as $item) {
+                array_push($errors, [__('app_translation.checklist_not_found') . ' ' . $item]);
+            }
+
+
+            return $errors;
+        }
+
+        return null;
     }
 }

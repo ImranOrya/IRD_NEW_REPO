@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\api\template\StatusController;
 
 Route::prefix('v1')->middleware(["authorized:" . 'user:api'])->group(function () {
-  Route::get('/block/status', [StatusController::class, 'blockStatus']);
+  Route::get('/block/status/{id}', [StatusController::class, 'blockStatus']);
 
   // NGO
   Route::get('/statuses/ngo/{id}', [StatusController::class, 'ngoStatuses'])->middleware(["userHasSubViewPermission:" . PermissionEnum::ngo->value . "," . SubPermissionEnum::ngo_status->value]);

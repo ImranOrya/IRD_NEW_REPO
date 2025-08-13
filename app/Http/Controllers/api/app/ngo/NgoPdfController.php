@@ -110,7 +110,7 @@ class NgoPdfController extends Controller
     }
     protected function loadNgoData($locale = 'en', $id)
     {
-        $locale = 'en';
+
         $ngo = DB::table('ngos as n')
             ->where('n.id', $id)
             ->join('ngo_trans as nt', function ($join) use ($locale) {
