@@ -19,6 +19,7 @@ use App\Http\Requests\template\user\UserRegisterRequest;
 
 use App\Http\Requests\template\user\UpdateUserPasswordRequest;
 use App\Repositories\Permission\PermissionRepositoryInterface;
+use Illuminate\Support\Facades\Http;
 
 class UserController extends Controller
 {

@@ -53,4 +53,5 @@ return [
     "allowed_file_types" => "Allowed file types: ",
     "file_size_error" => "File size must be between this size: ",
     "register_form_alre_submi" => "Registration form already submitted.",
+    "you_get_notify_after_appr" => "Your data has been submitted successfully. You will receive a notification once it has been approved.",
 ];

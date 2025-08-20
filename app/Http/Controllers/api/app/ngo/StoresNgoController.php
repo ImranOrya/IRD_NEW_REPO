@@ -560,7 +560,7 @@ class StoresNgoController extends Controller
         DB::commit();
         return response()->json(
             [
-                'message' => __('app_translation.success'),
+                'message' => __('app_translation.you_get_notify_after_appr'),
             ],
             200,
             [],

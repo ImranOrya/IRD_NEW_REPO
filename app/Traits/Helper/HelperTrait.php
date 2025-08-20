@@ -240,8 +240,6 @@ trait HelperTrait
 
     protected function validateCheckList($task, $exclude = [], $type)
     {
-
-
         // If nationality is Afghanistan, require work permit
 
         // Get all checklist IDs of this type
@@ -269,7 +267,6 @@ trait HelperTrait
             foreach ($missingCheckListNames as $item) {
                 array_push($errors, [__('app_translation.checklist_not_found') . ' ' . $item]);
             }
-
 
             return $errors;
         }
